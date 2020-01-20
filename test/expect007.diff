@@ -1,0 +1,4 @@
+--- test007.left.txt
++++ test007.right.txt
+-x
++abcdx

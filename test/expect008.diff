@@ -1,0 +1,8 @@
+--- test008.left.txt
++++ test008.right.txt
+ x
++a
++b
++c
++d
++x

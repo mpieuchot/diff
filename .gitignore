@@ -1,0 +1,8 @@
+.*.sw?
+diff/diff
+*.o
+*.d
+*.a
+tags
+test/got*.diff
+test/verify.*

@@ -1,0 +1,24 @@
+srcs = \
+	diff_atomize_text.c \
+	diff_main.c \
+	diff_myers.c \
+	diff_patience.c \
+	diff_output.c \
+	diff_output_plain.c \
+	diff_output_unidiff.c \
+	$(END)
+
+objs = $(srcs:.c=.o)
+
+libdiff.a: $(objs)
+	ar rcs $@ $^
+
+CFLAGS = -fsanitize=address -fsanitize=undefined -g
+
+%.o: %.c ./*.h ../include/diff/*.h
+	gcc $(CFLAGS) -I../include -o $@ -c $<
+
+.PHONY: clean
+clean:
+	-rm $(objs)
+	-rm libdiff.a

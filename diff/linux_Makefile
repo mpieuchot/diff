@@ -1,0 +1,13 @@
+CFLAGS = -fsanitize=address -fsanitize=undefined -g -O3
+
+diff: diff.c ../lib/libdiff.a
+	gcc $(CFLAGS) -I../include -o $@ $^
+
+
+../lib/libdiff.a: ../lib/*.[hc] ../include/diff/*.h
+	$(MAKE) -f linux_Makefile -C ../lib
+
+.PHONY: clean
+clean:
+	rm diff
+	$(MAKE) -f linux_Makefile -C ../lib clean

@@ -1,5 +1,6 @@
 --- test001.left.txt
 +++ test001.right.txt
+@@ -1,7 +1,6 @@
 -A
 -B
  C

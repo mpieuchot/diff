@@ -2,7 +2,7 @@
 
 diff_prog="../diff/diff"
 
-diff_type=plain
+diff_type=unidiff
 
 verify_diff_script() {
 	orig_left="$1"

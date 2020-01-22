@@ -109,7 +109,7 @@ diffreg(char *file1, char *file2, int flags)
 	str1 = mmapfile(file1, &st1);
 	str2 = mmapfile(file2, &st2);
 
-	diff_plain(stdout, &diff_config, &info, str1, st1.st_size, str2, st2.st_size);
+	diff_unidiff(stdout, &diff_config, &info, str1, st1.st_size, str2, st2.st_size, 3);
 
 	munmap(str1, st1.st_size);
 	munmap(str2, st2.st_size);

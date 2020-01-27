@@ -25,6 +25,43 @@
 
 #include <diff/arraylist.h>
 
+#ifndef MAX
+#define MAX(A,B) ((A)>(B)?(A):(B))
+#endif
+#ifndef MIN
+#define MIN(A,B) ((A)<(B)?(A):(B))
+#endif
+
+struct range {
+	int start;
+	int end;
+};
+
+static inline bool range_empty(const struct range *r)
+{
+	return r->start == r->end;
+}
+
+static inline bool ranges_touch(const struct range *a, const struct range *b)
+{
+	return (a->end >= b->start) && (a->start <= b->end);
+}
+
+static inline void ranges_merge(struct range *a, const struct range *b)
+{
+	*a = (struct range){
+		.start = MIN(a->start, b->start),
+		.end = MAX(a->end, b->end),
+	};
+}
+
+static inline int range_len(const struct range *r)
+{
+	if (!r)
+		return 0;
+	return r->end - r->start;
+}
+
 /* List of all possible return codes of a diff invocation. */
 enum diff_rc {
 	DIFF_RC_USE_DIFF_ALGO_FALLBACK = -1,

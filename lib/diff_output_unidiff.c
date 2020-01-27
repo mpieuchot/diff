@@ -42,32 +42,6 @@ static inline enum chunk_type chunk_type(const struct diff_chunk *chunk)
 	return CHUNK_SAME;
 }
 
-#define MAX(A,B) ((A)>(B)?(A):(B))
-#define MIN(A,B) ((A)<(B)?(A):(B))
-
-struct range {
-	int start;
-	int end;
-};
-
-static bool range_empty(const struct range *r)
-{
-	return r->start == r->end;
-}
-
-static bool ranges_touch(const struct range *a, const struct range *b)
-{
-	return (a->end >= b->start) && (a->start <= b->end);
-}
-
-static void ranges_merge(struct range *a, const struct range *b)
-{
-	*a = (struct range){
-		.start = MIN(a->start, b->start),
-		.end = MAX(a->end, b->end),
-	};
-}
-
 struct chunk_context {
 	struct range chunk;
 	struct range left, right;

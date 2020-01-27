@@ -54,9 +54,16 @@ static inline void dump_atom(const struct diff_data *left, const struct diff_dat
 
 static inline void dump_atoms(const struct diff_data *d, struct diff_atom *atom, unsigned int count)
 {
-	struct diff_atom *i;
-	foreach_diff_atom(i, atom, count) {
-		dump_atom(d, NULL, i);
+	if (count > 42) {
+		dump_atoms(d, atom, 20);
+		print("[%u lines skipped]\n", count - 20 - 20);
+		dump_atoms(d, atom + count - 20, 20);
+		return;
+	} else {
+		struct diff_atom *i;
+		foreach_diff_atom(i, atom, count) {
+			dump_atom(d, NULL, i);
+		}
 	}
 }
 

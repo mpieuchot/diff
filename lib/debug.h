@@ -45,7 +45,7 @@ static inline void dump_atom(const struct diff_data *left, const struct diff_dat
 			print("\\r");
 		else if (*s == '\n')
 			print("\\n");
-		else if (*s < 32 || *s >= 127)
+		else if ((*s < 32 || *s >= 127) && (*s != '\t'))
 			print("\\x%02x", *s);
 		else
 			print("%c", *s);

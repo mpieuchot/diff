@@ -32,7 +32,7 @@ void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_a
 
 		for (i = 0; i < len; i++) {
 			char c = atom->at[i];
-			if (c < 0x20 || c >= 0x7f)
+			if ((c < 0x20 || c >= 0x7f) && c != '\t')
 				fprintf(dest, "\\x%02x", (unsigned char)c);
 			else
 				fprintf(dest, "%c", c);

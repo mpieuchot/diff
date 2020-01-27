@@ -25,7 +25,6 @@
 #define debug_dump dump
 #define debug_dump_atom dump_atom
 #define debug_dump_atoms dump_atoms
-#define debug_dump_myers_graph dump_myers_graph
 
 static inline void dump_atom(const struct diff_data *left, const struct diff_data *right, const struct diff_atom *atom)
 {
@@ -122,6 +121,14 @@ static inline void dump_myers_graph(const struct diff_data *l, const struct diff
 		}
 		print("|\n");
 	}
+}
+
+static inline void debug_dump_myers_graph(const struct diff_data *l, const struct diff_data *r,
+				    int *kd)
+{
+	if (l->atoms.len > 99 || r->atoms.len > 99)
+		return;
+	dump_myers_graph(l, r, kd);
 }
 
 #else

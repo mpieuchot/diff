@@ -75,7 +75,7 @@ const struct diff_algo_config myers, patience, myers_divide;
 
 const struct diff_algo_config myers = (struct diff_algo_config){
 	.impl = diff_algo_myers,
-	.permitted_state_size = 104 * sizeof(int),
+	.permitted_state_size = 1024 * 1024 * sizeof(int),
 	.fallback_algo = &patience,
 };
 

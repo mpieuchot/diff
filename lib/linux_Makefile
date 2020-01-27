@@ -13,7 +13,7 @@ objs = $(srcs:.c=.o)
 libdiff.a: $(objs)
 	ar rcs $@ $^
 
-CFLAGS = -fsanitize=address -fsanitize=undefined -g
+CFLAGS = -fsanitize=address -fsanitize=undefined -g -O3
 
 %.o: %.c ./*.h ../include/diff/*.h
 	gcc $(CFLAGS) -I../include -o $@ -c $<

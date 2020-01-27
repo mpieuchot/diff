@@ -86,6 +86,7 @@ struct diff_atom {
 		bool unique_in_both;
 		struct diff_atom *pos_in_other;
 		struct diff_atom *prev_stack;
+		struct range identical_lines;
 	} patience;
 };
 

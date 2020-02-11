@@ -20,9 +20,9 @@
 
 #include "diff_main.h"
 
-enum diff_rc diff_output_plain(FILE *dest, const struct diff_input_info *info,
-			       const struct diff_result *result)
-{
+enum diff_rc
+diff_output_plain(FILE *dest, const struct diff_input_info *info,
+    const struct diff_result *result) {
 	if (!result)
 		return DIFF_RC_EINVAL;
 	if (result->rc != DIFF_RC_OK)
@@ -43,9 +43,10 @@ enum diff_rc diff_output_plain(FILE *dest, const struct diff_input_info *info,
 	return DIFF_RC_OK;
 }
 
-enum diff_rc diff_plain(FILE *dest, const struct diff_config *diff_config,
-			const struct diff_input_info *info,
-			const char *left, int left_len, const char *right, int right_len)
+enum diff_rc
+diff_plain(FILE *dest, const struct diff_config *diff_config,
+    const struct diff_input_info *info,
+    const char *left, int left_len, const char *right, int right_len)
 {
 	enum diff_rc rc;
 	left_len = left_len < 0 ? strlen(left) : left_len;

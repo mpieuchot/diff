@@ -20,7 +20,8 @@
 
 #include "diff_main.h"
 
-static int diff_data_atomize_text_lines(struct diff_data *d)
+static int
+diff_data_atomize_text_lines(struct diff_data *d)
 {
 	const uint8_t *pos = d->data;
 	const uint8_t *end = pos + d->len;
@@ -68,7 +69,8 @@ static int diff_data_atomize_text_lines(struct diff_data *d)
 	return DIFF_RC_OK;
 }
 
-enum diff_rc diff_atomize_text_by_line(void *func_data, struct diff_data *left, struct diff_data *right)
+enum diff_rc
+diff_atomize_text_by_line(void *func_data, struct diff_data *left, struct diff_data *right)
 {
 	enum diff_rc rc;
 	rc = diff_data_atomize_text_lines(left);

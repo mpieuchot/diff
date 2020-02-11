@@ -34,10 +34,10 @@
 /* Even if a left or right side is empty, diff output may need to know the position in that file.
  * So left_start or right_start must never be NULL -- pass left_count or right_count as zero to indicate staying at that
  * position without consuming any lines. */
-struct diff_chunk *diff_state_add_chunk(struct diff_state *state, bool solved,
-					struct diff_atom *left_start, unsigned int left_count,
-					struct diff_atom *right_start, unsigned int right_count)
-{
+struct diff_chunk *
+diff_state_add_chunk(struct diff_state *state, bool solved,
+    struct diff_atom *left_start, unsigned int left_count,
+    struct diff_atom *right_start, unsigned int right_count) {
 	struct diff_chunk *chunk;
 	struct diff_chunk_arraylist *result;
 
@@ -65,7 +65,8 @@ struct diff_chunk *diff_state_add_chunk(struct diff_state *state, bool solved,
 	return chunk;
 }
 
-void diff_data_init_root(struct diff_data *d, const uint8_t *data, size_t len)
+void
+diff_data_init_root(struct diff_data *d, const uint8_t *data, size_t len)
 {
 	*d = (struct diff_data){
 		.data = data,
@@ -74,9 +75,9 @@ void diff_data_init_root(struct diff_data *d, const uint8_t *data, size_t len)
 	};
 }
 
-void diff_data_init_subsection(struct diff_data *d, struct diff_data *parent,
-			       struct diff_atom *from_atom, unsigned int atoms_count)
-{
+void
+diff_data_init_subsection(struct diff_data *d, struct diff_data *parent,
+    struct diff_atom *from_atom, unsigned int atoms_count) {
 	struct diff_atom *last_atom = from_atom + atoms_count - 1;
 	*d = (struct diff_data){
 		.data = from_atom->at,
@@ -90,7 +91,8 @@ void diff_data_init_subsection(struct diff_data *d, struct diff_data *parent,
 	debug_dump(d);
 }
 
-void diff_data_free(struct diff_data *diff_data)
+void
+diff_data_free(struct diff_data *diff_data)
 {
 	if (!diff_data)
 		return;
@@ -98,7 +100,8 @@ void diff_data_free(struct diff_data *diff_data)
 		ARRAYLIST_FREE(diff_data->atoms);
 }
 
-enum diff_rc diff_algo_none(const struct diff_algo_config *algo_config, struct diff_state *state)
+enum diff_rc
+diff_algo_none(const struct diff_algo_config *algo_config, struct diff_state *state)
 {
 	debug("\n** %s\n", __func__);
 	debug("left:\n");
@@ -109,37 +112,38 @@ enum diff_rc diff_algo_none(const struct diff_algo_config *algo_config, struct d
 
 	/* Add a chunk of equal lines, if any */
 	unsigned int equal_atoms = 0;
-	while (equal_atoms < state->left.atoms.len && equal_atoms < state->right.atoms.len
-	       && diff_atom_same(&state->left.atoms.head[equal_atoms], &state->right.atoms.head[equal_atoms]))
+	while (equal_atoms < state->left.atoms.len && equal_atoms < state->right.atoms.len &&
+	    diff_atom_same(&state->left.atoms.head[equal_atoms], &state->right.atoms.head[equal_atoms]))
 		equal_atoms++;
 	if (equal_atoms) {
 		if (!diff_state_add_chunk(state, true,
-					  &state->left.atoms.head[0], equal_atoms,
-					  &state->right.atoms.head[0], equal_atoms))
+		    &state->left.atoms.head[0], equal_atoms,
+		    &state->right.atoms.head[0], equal_atoms))
 			return DIFF_RC_ENOMEM;
 	}
 
 	/* Add a "minus" chunk with all lines from the left. */
 	if (equal_atoms < state->left.atoms.len) {
 		if (!diff_state_add_chunk(state, true,
-					  &state->left.atoms.head[equal_atoms],
-					  state->left.atoms.len - equal_atoms,
-					  NULL, 0))
-		    return DIFF_RC_ENOMEM;
+		    &state->left.atoms.head[equal_atoms],
+		    state->left.atoms.len - equal_atoms,
+		    NULL, 0))
+			return DIFF_RC_ENOMEM;
 	}
 
 	/* Add a "plus" chunk with all lines from the right. */
 	if (equal_atoms < state->right.atoms.len) {
 		if (!diff_state_add_chunk(state, true,
-					  NULL, 0,
-					  &state->right.atoms.head[equal_atoms],
-					  state->right.atoms.len - equal_atoms))
-		return DIFF_RC_ENOMEM;
+		    NULL, 0,
+		    &state->right.atoms.head[equal_atoms],
+		    state->right.atoms.len - equal_atoms))
+			return DIFF_RC_ENOMEM;
 	}
 	return DIFF_RC_OK;
 }
 
-enum diff_rc diff_run_algo(const struct diff_algo_config *algo_config, struct diff_state *state)
+enum diff_rc
+diff_run_algo(const struct diff_algo_config *algo_config, struct diff_state *state)
 {
 	enum diff_rc rc;
 	ARRAYLIST_FREE(state->temp_result);
@@ -203,9 +207,10 @@ return_rc:
 	return rc;
 }
 
-struct diff_result *diff_main(const struct diff_config *config,
-			      const uint8_t *left_data, size_t left_len,
-			      const uint8_t *right_data, size_t right_len)
+struct diff_result *
+diff_main(const struct diff_config *config,
+    const uint8_t *left_data, size_t left_len,
+    const uint8_t *right_data, size_t right_len)
 {
 	struct diff_result *result = malloc(sizeof(struct diff_result));
 	if (!result)
@@ -236,7 +241,8 @@ struct diff_result *diff_main(const struct diff_config *config,
 	return result;
 }
 
-void diff_result_free(struct diff_result *result)
+void
+diff_result_free(struct diff_result *result)
 {
 	if (!result)
 		return;

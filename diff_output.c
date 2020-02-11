@@ -20,7 +20,8 @@
 
 #include "diff_main.h"
 
-void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom, unsigned int count)
+void
+diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom, unsigned int count)
 {
 	struct diff_atom *atom;
 	foreach_diff_atom(atom, start_atom, count) {
@@ -44,12 +45,13 @@ void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_a
 	}
 }
 
-enum diff_rc diff_output_info(FILE *dest, const struct diff_input_info *info)
+enum diff_rc
+diff_output_info(FILE *dest, const struct diff_input_info *info)
 {
 	if (info->arbitrary_info && *info->arbitrary_info)
 		fprintf(dest, "%s", info->arbitrary_info);
 	fprintf(dest, "--- %s\n+++ %s\n",
-		info->left_path ? : "a",
-		info->right_path ? : "b");
-        return DIFF_RC_OK;
+	    info->left_path ? : "a",
+	    info->right_path ? : "b");
+	return DIFF_RC_OK;
 }

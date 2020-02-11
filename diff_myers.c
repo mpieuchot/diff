@@ -189,10 +189,10 @@ struct diff_box {
  *    For d == 0, kd_forward[0] is initialized, i.e. the first invocation should be for d == 0.
  * meeting_snake: resulting meeting point, if any.
  */
-static void diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
-				      int *kd_forward, int *kd_backward, int d,
-				      struct diff_box *meeting_snake)
-{
+static void
+diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
+    int *kd_forward, int *kd_backward, int d,
+    struct diff_box *meeting_snake) {
 	int delta = (int)right->atoms.len - (int)left->atoms.len;
 	int prev_x;
 	int prev_y;
@@ -244,9 +244,9 @@ static void diff_divide_myers_forward(struct diff_data *left, struct diff_data *
 		 * If k == d, there is no k + 1 and k - 1 is the only option.
 		 * If k < d, use k + 1 in case that yields a larger x. Also use k + 1 if k - 1 is outside the graph.
 		 */
-		else if (k > -d && (k == d
-				    || (k - 1 >= -(int)right->atoms.len
-					&& kd_forward[k - 1] >= kd_forward[k + 1]))) {
+		else if (k > -d && (k == d ||
+		    (k - 1 >= -(int)right->atoms.len &&
+			    kd_forward[k - 1] >= kd_forward[k + 1]))) {
 			/* Advance from k - 1.
 			 * From position prev_k, step to the right in the Myers graph: x += 1.
 			 */
@@ -267,9 +267,9 @@ static void diff_divide_myers_forward(struct diff_data *left, struct diff_data *
 		}
 
 		/* Slide down any snake that we might find here. */
-		while (x < left->atoms.len && xk_to_y(x, k) < right->atoms.len
-		       && diff_atom_same(&left->atoms.head[x], &right->atoms.head[xk_to_y(x, k)]))
-		       x++;
+		while (x < left->atoms.len && xk_to_y(x, k) < right->atoms.len &&
+		    diff_atom_same(&left->atoms.head[x], &right->atoms.head[xk_to_y(x, k)]))
+			x++;
 		kd_forward[k] = x;
 
 		if (DEBUG) {
@@ -289,8 +289,8 @@ static void diff_divide_myers_forward(struct diff_data *left, struct diff_data *
 			}
 		}
 
-		if (x < 0 || x > left->atoms.len
-		    || xk_to_y(x, k) < 0 || xk_to_y(x, k) > right->atoms.len)
+		if (x < 0 || x > left->atoms.len ||
+		    xk_to_y(x, k) < 0 || xk_to_y(x, k) > right->atoms.len)
 			continue;
 
 		/* Figured out a new forwards traversal, see if this has gone onto or even past a preceding backwards
@@ -335,7 +335,7 @@ static void diff_divide_myers_forward(struct diff_data *left, struct diff_data *
 		 *
 		 * So in the forward path, we can only match up diagonals when the delta is odd.
 		 */
-		 /* Forwards is done first, so the backwards one was still at d - 1. Can't do this for d == 0. */
+		/* Forwards is done first, so the backwards one was still at d - 1. Can't do this for d == 0. */
 		int backwards_d = d - 1;
 		if ((delta & 1) && (backwards_d >= 0)) {
 			debug("backwards_d = %d\n", backwards_d);
@@ -377,9 +377,9 @@ static void diff_divide_myers_forward(struct diff_data *left, struct diff_data *
 				int backward_x = kd_backward[c];
 				int backward_y = xc_to_y(backward_x, c, delta);
 				debug(" prev_x,y = (%d,%d)  c%d:backward_x,y = (%d,%d)  k%d:x,y = (%d,%d)\n",
-				      prev_x, prev_y, c, backward_x, backward_y, k, x, xk_to_y(x, k));
-				if (prev_x <= backward_x && prev_y <= backward_y
-				    && x >= backward_x) {
+				    prev_x, prev_y, c, backward_x, backward_y, k, x, xk_to_y(x, k));
+				if (prev_x <= backward_x && prev_y <= backward_y &&
+					    x >= backward_x) {
 					*meeting_snake = (struct diff_box){
 						.left_start = backward_x,
 						.left_end = x,
@@ -387,10 +387,10 @@ static void diff_divide_myers_forward(struct diff_data *left, struct diff_data *
 						.right_end = xk_to_y(x, k),
 					};
 					debug("HIT x=(%u,%u) - y=(%u,%u)\n",
-					      meeting_snake->left_start,
-					      meeting_snake->right_start,
-					      meeting_snake->left_end,
-					      meeting_snake->right_end);
+					    meeting_snake->left_start,
+					    meeting_snake->right_start,
+					    meeting_snake->left_end,
+					    meeting_snake->right_end);
 					return;
 				}
 			}
@@ -413,10 +413,10 @@ static void diff_divide_myers_forward(struct diff_data *left, struct diff_data *
  *    The first invocation will be for d == 1.
  * meeting_snake: resulting meeting point, if any.
  */
-static void diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
-				       int *kd_forward, int *kd_backward, int d,
-				       struct diff_box *meeting_snake)
-{
+static void
+diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
+    int *kd_forward, int *kd_backward, int d,
+    struct diff_box *meeting_snake) {
 	int delta = (int)right->atoms.len - (int)left->atoms.len;
 	int prev_x;
 	int prev_y;
@@ -470,9 +470,9 @@ static void diff_divide_myers_backward(struct diff_data *left, struct diff_data 
 		 * If c == d, there is no c + 1 and c - 1 is the only option.
 		 * If c < d, use c + 1 in case that yields a larger x. Also use c + 1 if c - 1 is outside the graph.
 		 */
-		else if (c > -d && (c == d
-				    || (c - 1 >= -(int)right->atoms.len
-					&& kd_backward[c - 1] <= kd_backward[c + 1]))) {
+		else if (c > -d && (c == d ||
+		    (c - 1 >= -(int)right->atoms.len &&
+			    kd_backward[c - 1] <= kd_backward[c + 1]))) {
 			/* A top one.
 			 * From position prev_c, step upwards in the Myers graph: y -= 1.
 			 * Decrementing y is achieved by incrementing c while keeping the same x.
@@ -500,16 +500,16 @@ static void diff_divide_myers_backward(struct diff_data *left, struct diff_data 
 		if (xc_to_y(x, c, delta) > 0) {
 			debug("   r="); debug_dump_atom(right, left, &right->atoms.head[xc_to_y(x, c, delta)-1]);
 		}
-		while (x > 0 && xc_to_y(x, c, delta) > 0
-		       && diff_atom_same(&left->atoms.head[x-1], &right->atoms.head[xc_to_y(x, c, delta)-1]))
-		       x--;
+		while (x > 0 && xc_to_y(x, c, delta) > 0 &&
+		    diff_atom_same(&left->atoms.head[x - 1], &right->atoms.head[xc_to_y(x, c, delta) - 1]))
+			x--;
 		kd_backward[c] = x;
 
 		if (DEBUG) {
 			int fi;
 			for (fi = d; fi >= c; fi--) {
 				debug("kd_backward[%d] = (%d, %d)\n", fi, kd_backward[fi],
-				      kd_backward[fi] - fi + delta);
+				    kd_backward[fi] - fi + delta);
 				/*
 				if (kd_backward[fi] >= 0 && kd_backward[fi] < left->atoms.len)
 					debug_dump_atom(left, right, &left->atoms.head[kd_backward[fi]]);
@@ -523,8 +523,8 @@ static void diff_divide_myers_backward(struct diff_data *left, struct diff_data 
 			}
 		}
 
-		if (x < 0 || x > left->atoms.len
-		    || xc_to_y(x, c, delta) < 0 || xc_to_y(x, c, delta) > right->atoms.len)
+		if (x < 0 || x > left->atoms.len ||
+		    xc_to_y(x, c, delta) < 0 || xc_to_y(x, c, delta) > right->atoms.len)
 			continue;
 
 		/* Figured out a new backwards traversal, see if this has gone onto or even past a preceding forwards
@@ -573,10 +573,10 @@ static void diff_divide_myers_backward(struct diff_data *left, struct diff_data 
 				int forward_x = kd_forward[k];
 				int forward_y = xk_to_y(forward_x, k);
 				debug("Compare %d to %d  k=%d  (x=%d,y=%d) to (x=%d,y=%d)\n",
-				      forward_x, x, k,
-				      forward_x, xk_to_y(forward_x, k), x, xc_to_y(x, c, delta));
-				if (forward_x <= prev_x && forward_y <= prev_y
-				    && forward_x >= x) {
+				    forward_x, x, k,
+				    forward_x, xk_to_y(forward_x, k), x, xc_to_y(x, c, delta));
+				if (forward_x <= prev_x && forward_y <= prev_y &&
+					    forward_x >= x) {
 					*meeting_snake = (struct diff_box){
 						.left_start = x,
 						.left_end = forward_x,
@@ -584,10 +584,10 @@ static void diff_divide_myers_backward(struct diff_data *left, struct diff_data 
 						.right_end = xk_to_y(forward_x, k),
 					};
 					debug("HIT x=%u,%u - y=%u,%u\n",
-					      meeting_snake->left_start,
-					      meeting_snake->right_start,
-					      meeting_snake->left_end,
-					      meeting_snake->right_end);
+					    meeting_snake->left_start,
+					    meeting_snake->right_start,
+					    meeting_snake->left_end,
+					    meeting_snake->right_end);
 					return;
 				}
 			}
@@ -597,7 +597,8 @@ static void diff_divide_myers_backward(struct diff_data *left, struct diff_data 
 
 /* Myers "Divide et Impera": tracing forwards from the start and backwards from the end to find a midpoint that divides
  * the problem into smaller chunks. Requires only linear amounts of memory. */
-enum diff_rc diff_algo_myers_divide(const struct diff_algo_config *algo_config, struct diff_state *state)
+enum diff_rc
+diff_algo_myers_divide(const struct diff_algo_config *algo_config, struct diff_state *state)
 {
 	enum diff_rc rc = DIFF_RC_ENOMEM;
 	struct diff_data *left = &state->left;
@@ -649,8 +650,8 @@ enum diff_rc diff_algo_myers_divide(const struct diff_algo_config *algo_config, 
 		goto return_rc;
 	} else {
 		debug(" mid snake L: %u to %u of %u   R: %u to %u of %u\n",
-		      mid_snake.left_start, mid_snake.left_end, left->atoms.len,
-		      mid_snake.right_start, mid_snake.right_end, right->atoms.len);
+		    mid_snake.left_start, mid_snake.left_end, left->atoms.len,
+		    mid_snake.right_start, mid_snake.right_end, right->atoms.len);
 
 		/* Section before the mid-snake.  */
 		debug("Section before the mid-snake\n");
@@ -663,20 +664,20 @@ enum diff_rc diff_algo_myers_divide(const struct diff_algo_config *algo_config, 
 		if (left_section_len && right_section_len) {
 			/* Record an unsolved chunk, the caller will apply inner_algo() on this chunk. */
 			if (!diff_state_add_chunk(state, false,
-						  left_atom, left_section_len,
-						  right_atom, right_section_len))
+			    left_atom, left_section_len,
+			    right_atom, right_section_len))
 				goto return_rc;
 		} else if (left_section_len && !right_section_len) {
 			/* Only left atoms and none on the right, they form a "minus" chunk, then. */
 			if (!diff_state_add_chunk(state, true,
-						  left_atom, left_section_len,
-						  right_atom, 0))
+			    left_atom, left_section_len,
+			    right_atom, 0))
 				goto return_rc;
 		} else if (!left_section_len && right_section_len) {
 			/* No left atoms, only atoms on the right, they form a "plus" chunk, then. */
 			if (!diff_state_add_chunk(state, true,
-						  left_atom, 0,
-						  right_atom, right_section_len))
+			    left_atom, 0,
+			    right_atom, right_section_len))
 				goto return_rc;
 		}
 		/* else: left_section_len == 0 and right_section_len == 0, i.e. nothing before the mid-snake. */
@@ -684,10 +685,10 @@ enum diff_rc diff_algo_myers_divide(const struct diff_algo_config *algo_config, 
 		/* the mid-snake, identical data on both sides: */
 		debug("the mid-snake\n");
 		if (!diff_state_add_chunk(state, true,
-					  &left->atoms.head[mid_snake.left_start],
-					  mid_snake.left_end - mid_snake.left_start,
-					  &right->atoms.head[mid_snake.right_start],
-					  mid_snake.right_end - mid_snake.right_start))
+		    &left->atoms.head[mid_snake.left_start],
+		    mid_snake.left_end - mid_snake.left_start,
+		    &right->atoms.head[mid_snake.right_start],
+		    mid_snake.right_end - mid_snake.right_start))
 			goto return_rc;
 
 		/* Section after the mid-snake. */
@@ -702,20 +703,20 @@ enum diff_rc diff_algo_myers_divide(const struct diff_algo_config *algo_config, 
 		if (left_section_len && right_section_len) {
 			/* Record an unsolved chunk, the caller will apply inner_algo() on this chunk. */
 			if (!diff_state_add_chunk(state, false,
-						  left_atom, left_section_len,
-						  right_atom, right_section_len))
+			    left_atom, left_section_len,
+			    right_atom, right_section_len))
 				goto return_rc;
 		} else if (left_section_len && !right_section_len) {
 			/* Only left atoms and none on the right, they form a "minus" chunk, then. */
 			if (!diff_state_add_chunk(state, true,
-						  left_atom, left_section_len,
-						  right_atom, 0))
+			    left_atom, left_section_len,
+			    right_atom, 0))
 				goto return_rc;
 		} else if (!left_section_len && right_section_len) {
 			/* No left atoms, only atoms on the right, they form a "plus" chunk, then. */
 			if (!diff_state_add_chunk(state, true,
-						  left_atom, 0,
-						  right_atom, right_section_len))
+			    left_atom, 0,
+			    right_atom, right_section_len))
 				goto return_rc;
 		}
 		/* else: left_section_len == 0 and right_section_len == 0, i.e. nothing after the mid-snake. */
@@ -731,7 +732,8 @@ return_rc:
 
 /* Myers Diff tracing from the start all the way through to the end, requiring quadratic amounts of memory. This can
  * fail if the required space surpasses algo_config->permitted_state_size. */
-enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct diff_state *state)
+enum diff_rc
+diff_algo_myers(const struct diff_algo_config *algo_config, struct diff_state *state)
 {
 	/* do a diff_divide_myers_forward() without a _backward(), so that it walks forward across the entire
 	 * files to reach the end. Keep each run's state, and do a final backtrace. */
@@ -751,10 +753,10 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 	size_t kd_len = max + 1 + max;
 	size_t kd_buf_size = kd_len * kd_len;
 	debug("state size: %zu\n", kd_buf_size);
-	if (kd_buf_size < kd_len /* overflow? */
-	    || kd_buf_size * sizeof(int) > algo_config->permitted_state_size) {
+	if (kd_buf_size < kd_len /* overflow? */ ||
+		    kd_buf_size * sizeof(int) > algo_config->permitted_state_size) {
 		debug("state size %zu > permitted_state_size %zu, use fallback_algo\n",
-		      kd_buf_size, algo_config->permitted_state_size);
+		    kd_buf_size, algo_config->permitted_state_size);
 		return DIFF_RC_USE_DIFF_ALGO_FALLBACK;
 	}
 
@@ -825,9 +827,9 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 				 * If k == d, there is no k + 1 and k - 1 is the only option.
 				 * If k < d, use k + 1 in case that yields a larger x. Also use k + 1 if k - 1 is outside the graph.
 				 */
-				if (k > -d && (k == d
-					       || (k - 1 >= -(int)right->atoms.len
-						   && kd_prev_column[k - 1] >= kd_prev_column[k + 1]))) {
+				if (k > -d && (k == d ||
+				    (k - 1 >= -(int)right->atoms.len &&
+					    kd_prev_column[k - 1] >= kd_prev_column[k + 1]))) {
 					/* Advance from k - 1.
 					 * From position prev_k, step to the right in the Myers graph: x += 1.
 					 */
@@ -847,14 +849,14 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 			}
 
 			/* Slide down any snake that we might find here. */
-			while (x < left->atoms.len && xk_to_y(x, k) < right->atoms.len
-			       && diff_atom_same(&left->atoms.head[x], &right->atoms.head[xk_to_y(x, k)]))
-			       x++;
+			while (x < left->atoms.len && xk_to_y(x, k) < right->atoms.len &&
+			    diff_atom_same(&left->atoms.head[x], &right->atoms.head[xk_to_y(x, k)]))
+				x++;
 			kd_column[k] = x;
 
 			if (DEBUG) {
 				int fi;
-				for (fi = d; fi >= k; fi-=2) {
+				for (fi = d; fi >= k; fi -= 2) {
 					debug("kd_column[%d] = (%d, %d)\n", fi, kd_column[fi], kd_column[fi] - fi);
 #if 0
 					if (kd_column[fi] >= 0 && kd_column[fi] < left->atoms.len)
@@ -874,7 +876,7 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 				backtrack_d = d;
 				backtrack_k = k;
 				debug("Reached the end at d = %d, k = %d\n",
-				      backtrack_d, backtrack_k);
+				    backtrack_d, backtrack_k);
 				break;
 			}
 		}
@@ -917,7 +919,7 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 		kd_column[0] = x;
 		kd_column[1] = y;
 		debug("Backtrack d=%d: xy=(%d, %d)\n",
-		      d, kd_column[0], kd_column[1]);
+		    d, kd_column[0], kd_column[1]);
 
 		/* Don't access memory before kd_buf */
 		if (d == 0)
@@ -944,17 +946,17 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 		 *      |                  x == 0
 		 */
 		debug("prev[k-1] = %d,%d  prev[k+1] = %d,%d\n",
-		      kd_prev_column[k-1], xk_to_y(kd_prev_column[k-1],k-1),
-		      kd_prev_column[k+1], xk_to_y(kd_prev_column[k+1],k+1));
-		if (y == 0
-		    || (x > 0 && kd_prev_column[k - 1] >= kd_prev_column[k + 1])) {
+		    kd_prev_column[k - 1], xk_to_y(kd_prev_column[k - 1], k - 1),
+		    kd_prev_column[k + 1], xk_to_y(kd_prev_column[k + 1], k + 1));
+		if (y == 0 ||
+			    (x > 0 && kd_prev_column[k - 1] >= kd_prev_column[k + 1])) {
 			k = k - 1;
 			debug("prev k=k-1=%d x=%d y=%d\n",
-			      k, kd_prev_column[k], xk_to_y(kd_prev_column[k], k));
+			    k, kd_prev_column[k], xk_to_y(kd_prev_column[k], k));
 		} else {
 			k = k + 1;
 			debug("prev k=k+1=%d x=%d y=%d\n",
-			      k, kd_prev_column[k], xk_to_y(kd_prev_column[k], k));
+			    k, kd_prev_column[k], xk_to_y(kd_prev_column[k], k));
 		}
 		kd_column = kd_prev_column;
 	}
@@ -969,7 +971,7 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 		int next_x = kd_column[0];
 		int next_y = kd_column[1];
 		debug("Forward track from xy(%d,%d) to xy(%d,%d)\n",
-		      x, y, next_x, next_y);
+		    x, y, next_x, next_y);
 
 		struct diff_atom *left_atom = &left->atoms.head[x];
 		int left_section_len = next_x - x;
@@ -998,15 +1000,15 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 			 * the right before sliding down the snake. */
 			if (left_section_len == right_section_len + 1) {
 				if (!diff_state_add_chunk(state, true,
-							  left_atom, 1,
-							  right_atom, 0))
+				    left_atom, 1,
+				    right_atom, 0))
 					goto return_rc;
 				left_atom++;
 				left_section_len--;
 			} else if (right_section_len == left_section_len + 1) {
 				if (!diff_state_add_chunk(state, true,
-							  left_atom, 0,
-							  right_atom, 1))
+				    left_atom, 0,
+				    right_atom, 1))
 					goto return_rc;
 				right_atom++;
 				right_section_len--;
@@ -1017,20 +1019,20 @@ enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct 
 			}
 
 			if (!diff_state_add_chunk(state, true,
-						  left_atom, left_section_len,
-						  right_atom, right_section_len))
+			    left_atom, left_section_len,
+			    right_atom, right_section_len))
 				goto return_rc;
 		} else if (left_section_len && !right_section_len) {
 			/* Only left atoms and none on the right, they form a "minus" chunk, then. */
 			if (!diff_state_add_chunk(state, true,
-						  left_atom, left_section_len,
-						  right_atom, 0))
+			    left_atom, left_section_len,
+			    right_atom, 0))
 				goto return_rc;
 		} else if (!left_section_len && right_section_len) {
 			/* No left atoms, only atoms on the right, they form a "plus" chunk, then. */
 			if (!diff_state_add_chunk(state, true,
-						  left_atom, 0,
-						  right_atom, right_section_len))
+			    left_atom, 0,
+			    right_atom, right_section_len))
 				goto return_rc;
 		}
 

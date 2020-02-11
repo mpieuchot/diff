@@ -35,7 +35,8 @@
 /* stupid shims to compile and test on linux */
 #define __dead
 
-static const char *getprogname()
+static const char *
+getprogname()
 {
 	return "diff";
 }

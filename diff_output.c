@@ -15,7 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <diff/diff_output.h>
+#include "diff_output.h"
 
 void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom, unsigned int count)
 {

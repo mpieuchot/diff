@@ -23,7 +23,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <diff/arraylist.h>
+#include "arraylist.h"
 
 #ifndef MAX
 #define MAX(A,B) ((A)>(B)?(A):(B))

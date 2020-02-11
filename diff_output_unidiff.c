@@ -15,8 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <diff/diff_output.h>
-
+#include "diff_output.h"
 #include "debug.h"
 
 enum chunk_type {

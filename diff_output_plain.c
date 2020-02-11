@@ -15,7 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <diff/diff_output.h>
+#include "diff_output.h"
 
 enum diff_rc diff_output_plain(FILE *dest, const struct diff_input_info *info,
 			       const struct diff_result *result)

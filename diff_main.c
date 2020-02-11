@@ -26,8 +26,7 @@
 
 #include <assert.h>
 
-#include <diff/diff_main.h>
-
+#include "diff_main.h"
 #include "debug.h"
 
 /* Even if a left or right side is empty, diff output may need to know the position in that file.

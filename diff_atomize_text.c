@@ -15,7 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <diff/diff_main.h>
+#include "diff_main.h"
 
 static int diff_data_atomize_text_lines(struct diff_data *d)
 {

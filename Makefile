@@ -1,6 +1,6 @@
 .PATH:${.CURDIR}/../lib
 
-.include "../diff-version.mk"
+.include "diff-version.mk"
 
 PROG=	diff
 SRCS= \

@@ -18,7 +18,7 @@
 #pragma once
 
 #include <stdio.h>
-#include <diff/diff_main.h>
+#include "diff_main.h"
 
 struct diff_input_info {
 	const char *arbitrary_info;

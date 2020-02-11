@@ -17,8 +17,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <diff/diff_main.h>
-
+#include "diff_main.h"
 #include "debug.h"
 
 /* Myers' diff algorithm [1] is nicely explained in [2].

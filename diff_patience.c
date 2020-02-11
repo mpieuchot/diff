@@ -17,8 +17,8 @@
  */
 
 #include <assert.h>
-#include <diff/diff_main.h>
 
+#include "diff_main.h"
 #include "debug.h"
 
 /* Set unique_here = true for all atoms that exist exactly once in this list. */

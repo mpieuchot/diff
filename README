@@ -19,11 +19,5 @@ Many thanks for this valuable door opener!
 The source code itself is not based on the code found in those blogs, but
 written from scratch with the knowledge gained.
 
-Compile:
-  OpenBSD:
-    make -C diff
-  Linux:
-    make -f linux_Makefile -C diff
-
 Test:
   make -C test/

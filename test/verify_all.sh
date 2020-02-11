@@ -1,6 +1,6 @@
 #!/bin/sh
 
-diff_prog="../diff/diff"
+diff_prog="../obj/diff"
 
 diff_type=unidiff
 

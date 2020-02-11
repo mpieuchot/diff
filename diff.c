@@ -26,6 +26,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "diff_main.h"
+#include "diff_output.h"
+
 #ifdef __linux__
 /* stupid shims to compile and test on linux */
 #define __dead
@@ -67,9 +70,6 @@ main(int argc, char *argv[])
 
 	return diffreg(argv[0], argv[1], 0);
 }
-
-#include <diff/diff_main.h>
-#include <diff/diff_output.h>
 
 const struct diff_algo_config myers, patience, myers_divide;
 

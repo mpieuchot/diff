@@ -1,6 +1,5 @@
-/* Myers diff algorithm implementation, invented by Eugene W. Myers [1].
- * Implementations of both the Myers Divide Et Impera (using linear space)
- * and the canonical Myers algorithm (using quadratic space). */
+/*	$OpenBSD$	*/
+
 /*
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
  *
@@ -15,6 +14,12 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/*
+ * Myers diff algorithm implementation, invented by Eugene W. Myers [1].
+ * Implementations of both the Myers Divide Et Impera (using linear space)
+ * and the canonical Myers algorithm (using quadratic space).
  */
 
 #include "diff_main.h"

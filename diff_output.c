@@ -1,4 +1,5 @@
-/* Common parts for printing diff output */
+/*	$OpenBSD$	*/
+
 /*
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
  *
@@ -14,6 +15,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
+/* Common parts for printing diff output */
 
 #include "diff_output.h"
 

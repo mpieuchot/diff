@@ -1,3 +1,5 @@
+/*	$OpenBSD$	*/
+
 /*
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
  *

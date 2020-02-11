@@ -1,4 +1,5 @@
-/* Output all lines of a diff_result. */
+/*	$OpenBSD$	*/
+
 /*
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
  *
@@ -14,6 +15,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
+/* Output all lines of a diff_result. */
 
 #include "diff_output.h"
 

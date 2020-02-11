@@ -1,4 +1,5 @@
-/* Commandline diff utility to test diff implementations. */
+/*	$OpenBSD$	*/
+
 /*
  * Copyright (c) 2018 Martin Pieuchot
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
@@ -15,6 +16,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
+/* Commandline diff utility to test diff implementations. */
 
 #include <sys/mman.h>
 #include <sys/stat.h>

@@ -1,4 +1,5 @@
-/* Generic infrastructure to implement various diff algorithms (implementation). */
+/*	$OpenBSD$	*/
+
 /*
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
  *
@@ -15,6 +16,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* Generic infrastructure to implement various diff algorithms (implementation). */
 
 #include <sys/queue.h>
 #include <stdint.h>

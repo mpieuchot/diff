@@ -1,5 +1,5 @@
-/* Implementation of the Patience Diff algorithm invented by Bram Cohen:
- * Divide a diff problem into smaller chunks by an LCS of common-unique lines. */
+/*	$OpenBSD$	*/
+
 /*
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
  *
@@ -14,6 +14,11 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/*
+ * Implementation of the Patience Diff algorithm invented by Bram Cohen:
+ * Divide a diff problem into smaller chunks by an LCS of common-unique lines.
  */
 
 #include <assert.h>

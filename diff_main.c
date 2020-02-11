@@ -39,7 +39,7 @@ struct diff_chunk *diff_state_add_chunk(struct diff_state *state, bool solved,
 					struct diff_atom *right_start, unsigned int right_count)
 {
 	struct diff_chunk *chunk;
-	diff_chunk_arraylist_t *result;
+	struct diff_chunk_arraylist *result;
 
 	if (solved && !state->temp_result.len)
 		result = &state->result->chunks;

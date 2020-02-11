@@ -108,7 +108,7 @@ static inline bool diff_atom_same(const struct diff_atom *left, const struct dif
 struct diff_data {
 	const uint8_t *data;
 	size_t len;
-	ARRAYLIST(struct diff_atom) atoms;
+	ARRAYLIST_HEAD(, diff_atom) atoms;
 	struct diff_data *root;
 };
 
@@ -170,14 +170,14 @@ struct diff_chunk {
 	unsigned int right_count;
 };
 
-typedef ARRAYLIST(struct diff_chunk) diff_chunk_arraylist_t;
+ARRAYLIST_HEAD(diff_chunk_arraylist, diff_chunk);
 #define DIFF_RESULT_ALLOC_BLOCKSIZE 128
 
 struct diff_result {
 	enum diff_rc rc;
 	struct diff_data left;
 	struct diff_data right;
-	diff_chunk_arraylist_t chunks;
+	struct diff_chunk_arraylist chunks;
 };
 
 struct diff_state {
@@ -191,7 +191,7 @@ struct diff_state {
 	unsigned int recursion_depth_left;
 
 	/* Remaining chunks from one diff algorithm pass, if any solved == false chunks came up. */
-	diff_chunk_arraylist_t temp_result;
+	struct diff_chunk_arraylist temp_result;
 };
 
 struct diff_chunk *diff_state_add_chunk(struct diff_state *state, bool solved,

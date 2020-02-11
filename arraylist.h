@@ -38,26 +38,27 @@ static inline void *recallocarray(void *buf, size_t oldn, size_t n, size_t membe
 
 /* Usage:
  *
- * ARRAYLIST(any_type_t) list;
- * // OR
- * typedef ARRAYLIST(any_type_t) any_type_list_t;
- * any_type_list_t list;
+ * ARRAYLIST_HEAD(head_type, any_type) list;
  *
- * ARRAYLIST_INIT(list, 128); // < number of (at first unused) members to add on each realloc
- * any_type_t *x;
- * while (bar) {
- *         ARRAYLIST_ADD(x, list); // < enlarges the allocated array as needed; list.head may change due to realloc
- *         if (!x)
- *                 abort();
- *         *x = random_foo_value;
- * }
+ * // number of (at first unused) members to add on each realloc
+ * ARRAYLIST_INIT(list, 128);
+ *
+ * 	struct any_type *x;
+ * 	while (bar) {
+ * 	        // enlarges the allocated array as needed;
+ * 	        // list.head may change due to realloc
+ * 	        ARRAYLIST_ADD(x, list);
+ * 	        if (!x)
+ * 	                abort();
+ * 	        *x = random_foo_value;
+ * 	}
  * for (i = 0; i < list.len; i++)
  *         printf("%s", foo_to_str(list.head[i]));
  * ARRAYLIST_FREE(list);
  */
-#define ARRAYLIST(MEMBER_TYPE) \
-	struct { \
-		MEMBER_TYPE *head; \
+#define ARRAYLIST_HEAD(LIST_NAME, MEMBER_TYPE) \
+	struct LIST_NAME { \
+		struct MEMBER_TYPE *head; \
 		unsigned int len; \
 		unsigned int allocated; \
 		unsigned int alloc_blocksize; \

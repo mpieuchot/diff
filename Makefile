@@ -6,8 +6,6 @@ SRCS= \
 	diff_myers.c \
 	diff_patience.c \
 	diff_output.c \
-	diff_output_plain.c \
-	diff_output_unidiff.c \
 	${END}
 
 .if defined(PROFILE)

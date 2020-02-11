@@ -18,7 +18,7 @@
 
 /* Common parts for printing diff output */
 
-#include "diff_output.h"
+#include "diff_main.h"
 
 void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom, unsigned int count)
 {

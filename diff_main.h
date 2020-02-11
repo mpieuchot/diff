@@ -21,6 +21,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -288,3 +289,26 @@ struct diff_result *diff_main(const struct diff_config *config,
 			      const uint8_t *left_data, size_t left_len,
 			      const uint8_t *right_data, size_t right_len);
 void diff_result_free(struct diff_result *result);
+
+/* Diff output generators and invocation shims. */
+struct diff_input_info {
+	const char *arbitrary_info;
+	const char *left_path;
+	const char *right_path;
+};
+
+enum diff_rc diff_output_plain(FILE *dest, const struct diff_input_info *info,
+			       const struct diff_result *result);
+enum diff_rc diff_plain(FILE *dest, const struct diff_config *diff_config,
+			const struct diff_input_info *info,
+			const char *left, int left_len, const char *right, int right_len);
+
+enum diff_rc diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
+				 const struct diff_result *result, unsigned int context_lines);
+enum diff_rc diff_unidiff(FILE *dest, const struct diff_config *diff_config,
+			  const struct diff_input_info *info,
+			  const char *left, int left_len, const char *right, int right_len,
+			  unsigned int context_lines);
+
+enum diff_rc diff_output_info(FILE *dest, const struct diff_input_info *info);
+void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom, unsigned int count);

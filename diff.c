@@ -30,7 +30,6 @@
 #include <unistd.h>
 
 #include "diff_main.h"
-#include "diff_output.h"
 
 #ifdef __linux__
 /* stupid shims to compile and test on linux */

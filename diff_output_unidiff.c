@@ -18,7 +18,7 @@
 
 /* Produce a unidiff output from a diff_result. */
 
-#include "diff_output.h"
+#include "diff_main.h"
 #include "debug.h"
 
 enum chunk_type {

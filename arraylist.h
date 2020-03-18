@@ -40,45 +40,48 @@
  *         printf("%s", foo_to_str(list.head[i]));
  * ARRAYLIST_FREE(list);
  */
-#define ARRAYLIST_HEAD(LIST_NAME, MEMBER_TYPE) \
-	struct LIST_NAME { \
-		struct MEMBER_TYPE *head; \
-		unsigned int len; \
-		unsigned int allocated; \
-		unsigned int alloc_blocksize; \
+#define ARRAYLIST_HEAD(name, type)					\
+	struct name { 							\
+		struct type *head;					\
+		unsigned int len;					\
+		unsigned int allocated;					\
+		unsigned int blocksize;					\
 	}
 
-#define ARRAYLIST_INIT(ARRAY_LIST, ALLOC_BLOCKSIZE) do { \
-		(ARRAY_LIST).head = NULL; \
-		(ARRAY_LIST).len = 0; \
-		(ARRAY_LIST).allocated = 0; \
-		(ARRAY_LIST).alloc_blocksize = ALLOC_BLOCKSIZE; \
-	} while(0)
+#define ARRAYLIST_INIT(alh, nelems) do { 				\
+		(alh).head = NULL; 					\
+		(alh).len = 0;						\
+		(alh).allocated = 0;					\
+		(alh).blocksize = (nelems);				\
+} while(0)
 
-#define ARRAYLIST_ADD(NEW_ITEM_P, ARRAY_LIST) do { \
-		if ((ARRAY_LIST).len && !(ARRAY_LIST).allocated) { \
-			NEW_ITEM_P = NULL; \
-			break; \
-		} \
-		if ((ARRAY_LIST).head == NULL || (ARRAY_LIST).allocated < (ARRAY_LIST).len + 1) { \
-			(ARRAY_LIST).allocated += (ARRAY_LIST).alloc_blocksize ? : 8; \
-			(ARRAY_LIST).head = recallocarray((ARRAY_LIST).head, (ARRAY_LIST).len, \
-							  (ARRAY_LIST).allocated, sizeof(*(ARRAY_LIST).head)); \
-		}; \
-		if (!(ARRAY_LIST).head || (ARRAY_LIST).allocated < (ARRAY_LIST).len + 1) { \
-			NEW_ITEM_P = NULL; \
-			break; \
-		} \
-		(NEW_ITEM_P) = &(ARRAY_LIST).head[(ARRAY_LIST).len]; \
-		(ARRAY_LIST).len++; \
-	} while (0)
+#define ARRAYLIST_ADD(elm, alh) do { 					\
+		if ((alh).len && (alh).allocated == 0) {		\
+			elm = NULL; 					\
+			break; 						\
+		} 							\
+		if ((alh).head == NULL ||				\
+		    (alh).allocated < (alh).len + 1) { 			\
+			(alh).allocated +=				\
+			    (alh).blocksize ? : 8; 			\
+			(alh).head = recallocarray((alh).head, 		\
+			    (alh).len, (alh).allocated,			\
+			    sizeof(*(alh).head)); 			\
+		} 							\
+		if ((alh).head == NULL ||				\
+		    (alh).allocated < (alh).len + 1) { 			\
+			elm = NULL; 					\
+			break; 						\
+		} 							\
+		(elm) = &(alh).head[(alh).len];				\
+		(alh).len++; 						\
+} while (0)
 
-#define ARRAYLIST_CLEAR(ARRAY_LIST) \
-	(ARRAY_LIST).len = 0
+#define ARRAYLIST_CLEAR(alh)						\
+	(alh).len = 0
 
-#define ARRAYLIST_FREE(ARRAY_LIST) \
-	do { \
-		if ((ARRAY_LIST).head && (ARRAY_LIST).allocated) \
-			free((ARRAY_LIST).head); \
-		ARRAYLIST_INIT(ARRAY_LIST, (ARRAY_LIST).alloc_blocksize); \
-	} while(0)
+#define ARRAYLIST_FREE(alh) do { 					\
+		if ((alh).head != NULL && (alh).allocated > 0) 		\
+			free((alh).head); 				\
+		ARRAYLIST_INIT(alh, (alh).blocksize); 			\
+} while(0)

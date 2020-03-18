@@ -359,18 +359,11 @@ struct diff_input_info {
 	const char *right_path;
 };
 
-enum diff_rc diff_output_plain(FILE *dest, const struct diff_input_info *info,
-			       const struct diff_result *result);
 enum diff_rc diff_plain(FILE *dest, const struct diff_config *diff_config,
 			const struct diff_input_info *info,
 			const char *left, int left_len, const char *right, int right_len);
 
-enum diff_rc diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
-				 const struct diff_result *result, unsigned int context_lines);
 enum diff_rc diff_unidiff(FILE *dest, const struct diff_config *diff_config,
 			  const struct diff_input_info *info,
 			  const char *left, int left_len, const char *right, int right_len,
 			  unsigned int context_lines);
-
-enum diff_rc diff_output_info(FILE *dest, const struct diff_input_info *info);
-void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom, unsigned int count);

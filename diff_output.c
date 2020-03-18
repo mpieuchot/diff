@@ -16,6 +16,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+ * Common parts for printing diff output
+ */
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -24,9 +28,12 @@
 #include "diff_main.h"
 #include "debug.h"
 
-/*
- * Common parts for printing diff output
- */
+enum diff_rc diff_output_plain(FILE *dest, const struct diff_input_info *info,
+			       const struct diff_result *result);
+enum diff_rc diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
+				 const struct diff_result *result, unsigned int context_lines);
+enum diff_rc diff_output_info(FILE *dest, const struct diff_input_info *info);
+void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom, unsigned int count);
 
 void
 diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom,
@@ -120,10 +127,10 @@ diff_plain(FILE *dest, const struct diff_config *diff_config,
  */
 enum chunk_type {
 	CHUNK_EMPTY,
-	    CHUNK_PLUS,
-	    CHUNK_MINUS,
-	    CHUNK_SAME,
-	    CHUNK_WEIRD,
+	CHUNK_PLUS,
+	CHUNK_MINUS,
+	CHUNK_SAME,
+	CHUNK_WEIRD,
 };
 
 static inline enum chunk_type

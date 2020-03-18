@@ -18,6 +18,9 @@
 
 /* Split source by line breaks, and calculate a simplistic checksum. */
 
+#include <stdint.h>
+
+#include "arraylist.h"
 #include "diff_main.h"
 
 static int

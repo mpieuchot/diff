@@ -19,13 +19,14 @@
 
 /* Commandline diff utility to test diff implementations. */
 
+#include <sys/cdefs.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
 #include <err.h>
 #include <fcntl.h>
-#include <inttypes.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 

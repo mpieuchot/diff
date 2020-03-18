@@ -22,6 +22,9 @@
  * and the canonical Myers algorithm (using quadratic space).
  */
 
+#include <stdbool.h>
+#include <stdlib.h>
+
 #include "diff_main.h"
 #include "debug.h"
 

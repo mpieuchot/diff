@@ -20,16 +20,12 @@
  * Generic infrastructure to implement various diff algorithms (implementation).
  */
 
-#include <sys/queue.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
-#include <limits.h>
 
-#include <assert.h>
-
+#include "arraylist.h"
 #include "diff_main.h"
 #include "debug.h"
 

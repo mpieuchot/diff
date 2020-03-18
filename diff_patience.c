@@ -22,6 +22,8 @@
  */
 
 #include <assert.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include "diff_main.h"
 #include "debug.h"

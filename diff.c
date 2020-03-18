@@ -76,22 +76,26 @@ main(int argc, char *argv[])
 
 const struct diff_algo_config myers, patience, myers_divide;
 
-const struct diff_algo_config myers = (struct diff_algo_config){
+const struct diff_algo_config myers = {
 	.impl = diff_algo_myers,
 	.permitted_state_size = 1024 * 1024 * sizeof(int),
 	.fallback_algo = &patience,
 };
 
-const struct diff_algo_config patience = (struct diff_algo_config){
+const struct diff_algo_config patience = {
 	.impl = diff_algo_patience,
-	.inner_algo = &patience,	// After subdivision, do Patience again.
-	.fallback_algo = &myers_divide, // If subdivision failed, do Myers Divide et Impera.
+	/* After subdivision, do Patience again. */
+	.inner_algo = &patience,
+	/* If subdivision failed, do Myers Divide et Impera. */
+	.fallback_algo = &myers_divide,
 };
 
 const struct diff_algo_config myers_divide = (struct diff_algo_config){
 	.impl = diff_algo_myers_divide,
-	.inner_algo = &myers,		// When division succeeded, start from the top.
-					// (fallback_algo = NULL implies diff_algo_none).
+	/* When division succeeded, start from the top. */
+	.inner_algo = &myers,
+	/* (fallback_algo = NULL implies diff_algo_none). */
+	.fallback_algo = NULL,
 };
 
 const struct diff_config diff_config = {
@@ -112,7 +116,8 @@ diffreg(char *file1, char *file2, int flags)
 	str1 = mmapfile(file1, &st1);
 	str2 = mmapfile(file2, &st2);
 
-	diff_unidiff(stdout, &diff_config, &info, str1, st1.st_size, str2, st2.st_size, 3);
+	diff_unidiff(stdout, &diff_config, &info, str1, st1.st_size, str2,
+	    st2.st_size, 3);
 
 	munmap(str1, st1.st_size);
 	munmap(str2, st2.st_size);

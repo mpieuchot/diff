@@ -25,10 +25,10 @@ diff_data_atomize_text_lines(struct diff_data *d)
 {
 	const uint8_t *pos = d->data;
 	const uint8_t *end = pos + d->len;
-	enum diff_rc rc;
-
 	unsigned int array_size_estimate = d->len / 50;
 	unsigned int pow2 = 1;
+	enum diff_rc rc;
+
 	while (array_size_estimate >>= 1)
 		pow2++;
 
@@ -37,13 +37,18 @@ diff_data_atomize_text_lines(struct diff_data *d)
 	while (pos < end) {
 		const uint8_t *line_end = pos;
 		unsigned int hash = 0;
+		struct diff_atom *atom;
 
-		while (line_end < end && *line_end != '\r' && *line_end != '\n') {
+		while (line_end < end &&
+		    *line_end != '\r' && *line_end != '\n') {
 			hash = hash * 23 + *line_end;
 			line_end++;
 		}
 
-		/* When not at the end of data, the line ending char ('\r' or '\n') must follow */
+		/*
+		 * When not at the end of data, the line ending char ('\r'
+		 * or '\n') must follow
+		 */
 		if (line_end < end)
 			line_end++;
 		/* If that was an '\r', also pull in any following '\n' */
@@ -51,7 +56,6 @@ diff_data_atomize_text_lines(struct diff_data *d)
 			line_end++;
 
 		/* Record the found line as diff atom */
-		struct diff_atom *atom;
 		ARRAYLIST_ADD(atom, d->atoms);
 		if (!atom)
 			return DIFF_RC_ENOMEM;
@@ -70,9 +74,11 @@ diff_data_atomize_text_lines(struct diff_data *d)
 }
 
 enum diff_rc
-diff_atomize_text_by_line(void *func_data, struct diff_data *left, struct diff_data *right)
+diff_atomize_text_by_line(void *func_data, struct diff_data *left,
+    struct diff_data *right)
 {
 	enum diff_rc rc;
+
 	rc = diff_data_atomize_text_lines(left);
 	if (rc != DIFF_RC_OK)
 		return rc;

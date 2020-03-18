@@ -16,7 +16,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Generic infrastructure to implement various diff algorithms (implementation). */
+/*
+ * Generic infrastructure to implement various diff algorithms (implementation).
+ */
 
 #include <sys/queue.h>
 #include <stdint.h>
@@ -31,13 +33,17 @@
 #include "diff_main.h"
 #include "debug.h"
 
-/* Even if a left or right side is empty, diff output may need to know the position in that file.
- * So left_start or right_start must never be NULL -- pass left_count or right_count as zero to indicate staying at that
- * position without consuming any lines. */
+/*
+ * Even if a left or right side is empty, diff output may need to know the
+ * position in that file.  So left_start or right_start must never be NULL
+ * -- pass left_count or right_count as zero to indicate staying at that
+ * position without consuming any lines.
+ */
 struct diff_chunk *
 diff_state_add_chunk(struct diff_state *state, bool solved,
     struct diff_atom *left_start, unsigned int left_count,
-    struct diff_atom *right_start, unsigned int right_count) {
+    struct diff_atom *right_start, unsigned int right_count)
+{
 	struct diff_chunk *chunk;
 	struct diff_chunk_arraylist *result;
 
@@ -49,7 +55,7 @@ diff_state_add_chunk(struct diff_state *state, bool solved,
 	ARRAYLIST_ADD(chunk, *result);
 	if (!chunk)
 		return NULL;
-	*chunk = (struct diff_chunk){
+	*chunk = (struct diff_chunk) {
 		.solved = solved,
 		.left_start = left_start,
 		.left_count = left_count,
@@ -68,7 +74,7 @@ diff_state_add_chunk(struct diff_state *state, bool solved,
 void
 diff_data_init_root(struct diff_data *d, const uint8_t *data, size_t len)
 {
-	*d = (struct diff_data){
+	*d = (struct diff_data) {
 		.data = data,
 		.len = len,
 		.root = d,
@@ -77,9 +83,11 @@ diff_data_init_root(struct diff_data *d, const uint8_t *data, size_t len)
 
 void
 diff_data_init_subsection(struct diff_data *d, struct diff_data *parent,
-    struct diff_atom *from_atom, unsigned int atoms_count) {
+    struct diff_atom *from_atom, unsigned int atoms_count)
+{
 	struct diff_atom *last_atom = from_atom + atoms_count - 1;
-	*d = (struct diff_data){
+
+	*d = (struct diff_data) {
 		.data = from_atom->at,
 		.len = (last_atom->at + last_atom->len) - from_atom->at,
 		.root = parent->root,
@@ -101,8 +109,11 @@ diff_data_free(struct diff_data *diff_data)
 }
 
 enum diff_rc
-diff_algo_none(const struct diff_algo_config *algo_config, struct diff_state *state)
+diff_algo_none(const struct diff_algo_config *algo_config,
+    struct diff_state *state)
 {
+	unsigned int equal_atoms = 0;
+
 	debug("\n** %s\n", __func__);
 	debug("left:\n");
 	debug_dump(&state->left);
@@ -111,10 +122,12 @@ diff_algo_none(const struct diff_algo_config *algo_config, struct diff_state *st
 	debug_dump_myers_graph(&state->left, &state->right, NULL);
 
 	/* Add a chunk of equal lines, if any */
-	unsigned int equal_atoms = 0;
-	while (equal_atoms < state->left.atoms.len && equal_atoms < state->right.atoms.len &&
-	    diff_atom_same(&state->left.atoms.head[equal_atoms], &state->right.atoms.head[equal_atoms]))
+	while (equal_atoms < state->left.atoms.len &&
+	    equal_atoms < state->right.atoms.len &&
+	    diff_atom_same(&state->left.atoms.head[equal_atoms],
+	    &state->right.atoms.head[equal_atoms]))
 		equal_atoms++;
+
 	if (equal_atoms) {
 		if (!diff_state_add_chunk(state, true,
 		    &state->left.atoms.head[0], equal_atoms,
@@ -143,12 +156,14 @@ diff_algo_none(const struct diff_algo_config *algo_config, struct diff_state *st
 }
 
 enum diff_rc
-diff_run_algo(const struct diff_algo_config *algo_config, struct diff_state *state)
+diff_run_algo(const struct diff_algo_config *algo_config,
+    struct diff_state *state)
 {
 	enum diff_rc rc;
+
 	ARRAYLIST_FREE(state->temp_result);
 
-	if (!algo_config || !algo_config->impl || !state->recursion_depth_left) {
+	if (!algo_config || !algo_config->impl || !state->recursion_depth_left){
 		debug("MAX RECURSION REACHED, just dumping diff chunks\n");
 		return diff_algo_none(algo_config, state);
 	}
@@ -157,7 +172,8 @@ diff_run_algo(const struct diff_algo_config *algo_config, struct diff_state *sta
 	rc = algo_config->impl(algo_config, state);
 	switch (rc) {
 	case DIFF_RC_USE_DIFF_ALGO_FALLBACK:
-		debug("Got DIFF_RC_USE_DIFF_ALGO_FALLBACK (%p)\n", algo_config->fallback_algo);
+		debug("Got DIFF_RC_USE_DIFF_ALGO_FALLBACK (%p)\n",
+		    algo_config->fallback_algo);
 		rc = diff_run_algo(algo_config->fallback_algo, state);
 		goto return_rc;
 
@@ -170,14 +186,21 @@ diff_run_algo(const struct diff_algo_config *algo_config, struct diff_state *sta
 		goto return_rc;
 	}
 
-	/* Pick up any diff chunks that are still unsolved and feed to inner_algo.
+	/*
+	 * Pick up any diff chunks that are still unsolved and feed to
+	 * inner_algo.
 	 * inner_algo will solve unsolved chunks and append to result,
-	 * and subsequent solved chunks on this level are then appended to result afterwards. */
+	 * and subsequent solved chunks on this level are then appended
+	 * to result afterwards.
+	 */
 	int i;
 	for (i = 0; i < state->temp_result.len; i++) {
+		struct diff_state inner_state;
 		struct diff_chunk *c = &state->temp_result.head[i];
+
 		if (c->solved) {
 			struct diff_chunk *final_c;
+
 			ARRAYLIST_ADD(final_c, state->result->chunks);
 			if (!final_c) {
 				rc = DIFF_RC_ENOMEM;
@@ -188,15 +211,16 @@ diff_run_algo(const struct diff_algo_config *algo_config, struct diff_state *sta
 		}
 
 		/* c is an unsolved chunk, feed to inner_algo */
-		struct diff_state inner_state = {
+		inner_state = (struct diff_state) {
 			.result = state->result,
 			.recursion_depth_left = state->recursion_depth_left - 1,
 		};
-		diff_data_init_subsection(&inner_state.left, &state->left, c->left_start, c->left_count);
-		diff_data_init_subsection(&inner_state.right, &state->right, c->right_start, c->right_count);
+		diff_data_init_subsection(&inner_state.left, &state->left,
+		    c->left_start, c->left_count);
+		diff_data_init_subsection(&inner_state.right, &state->right,
+		    c->right_start, c->right_count);
 
 		rc = diff_run_algo(algo_config->inner_algo, &inner_state);
-
 		if (rc != DIFF_RC_OK)
 			goto return_rc;
 	}
@@ -212,7 +236,10 @@ diff_main(const struct diff_config *config,
     const uint8_t *left_data, size_t left_len,
     const uint8_t *right_data, size_t right_len)
 {
-	struct diff_result *result = malloc(sizeof(struct diff_result));
+	struct diff_result *result;
+	struct diff_state state;
+
+	result = malloc(sizeof(struct diff_result));
 	if (!result)
 		return NULL;
 
@@ -225,16 +252,19 @@ diff_main(const struct diff_config *config,
 		return result;
 	}
 
-	result->rc = config->atomize_func(config->atomize_func_data, &result->left, &result->right);
+	result->rc = config->atomize_func(config->atomize_func_data,
+	    &result->left, &result->right);
 	if (result->rc != DIFF_RC_OK)
 		return result;
 
-	struct diff_state state = {
+	state = (struct diff_state) {
 		.result = result,
 		.recursion_depth_left = config->max_recursion_depth ? : 1024,
 	};
-	diff_data_init_subsection(&state.left, &result->left, result->left.atoms.head, result->left.atoms.len);
-	diff_data_init_subsection(&state.right, &result->right, result->right.atoms.head, result->right.atoms.len);
+	diff_data_init_subsection(&state.left, &result->left,
+	    result->left.atoms.head, result->left.atoms.len);
+	diff_data_init_subsection(&state.right, &result->right,
+	    result->right.atoms.head, result->right.atoms.len);
 
 	result->rc = diff_run_algo(config->algo, &state);
 

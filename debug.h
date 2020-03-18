@@ -28,8 +28,11 @@
 #define debug_dump_atom dump_atom
 #define debug_dump_atoms dump_atoms
 
-static inline void dump_atom(const struct diff_data *left, const struct diff_data *right, const struct diff_atom *atom)
+static inline void
+dump_atom(const struct diff_data *left, const struct diff_data *right, const struct diff_atom *atom)
 {
+	const char *s;
+
 	if (!atom) {
 		print("NULL atom\n");
 		return;
@@ -37,10 +40,11 @@ static inline void dump_atom(const struct diff_data *left, const struct diff_dat
 	if (left)
 		print(" %3ld", diff_atom_root_idx(left, atom));
 	if (right && atom->patience.pos_in_other)
-		print(" %3ld", diff_atom_root_idx(right, atom->patience.pos_in_other));
+		print(" %3ld", diff_atom_root_idx(right,
+		    atom->patience.pos_in_other));
 
-	print(" %s%s '", atom->patience.unique_here ? "u" : " ", atom->patience.unique_in_both ? "c" : " ");
-	const char *s;
+	print(" %s%s '", atom->patience.unique_here ? "u" : " ",
+	    atom->patience.unique_in_both ? "c" : " ");
 	for (s = atom->at; s < (const char*)(atom->at + atom->len); s++) {
 		if (*s == '\r')
 			print("\\r");
@@ -54,7 +58,8 @@ static inline void dump_atom(const struct diff_data *left, const struct diff_dat
 	print("'\n");
 }
 
-static inline void dump_atoms(const struct diff_data *d, struct diff_atom *atom, unsigned int count)
+static inline void
+dump_atoms(const struct diff_data *d, struct diff_atom *atom, unsigned int count)
 {
 	if (count > 42) {
 		dump_atoms(d, atom, 20);
@@ -69,16 +74,17 @@ static inline void dump_atoms(const struct diff_data *d, struct diff_atom *atom,
 	}
 }
 
-static inline void dump(struct diff_data *d)
+static inline void
+dump(struct diff_data *d)
 {
 	dump_atoms(d, d->atoms.head, d->atoms.len);
 }
 
-static inline void dump_myers_graph(const struct diff_data *l, const struct diff_data *r,
-				    int *kd)
+static inline void
+dump_myers_graph(const struct diff_data *l, const struct diff_data *r, int *kd)
 {
-	int x;
-	int y;
+	int x, y;
+
 	print("  ");
 	for (x = 0; x <= l->atoms.len; x++)
 		print("%2d", x);
@@ -132,8 +138,9 @@ static inline void dump_myers_graph(const struct diff_data *l, const struct diff
 	}
 }
 
-static inline void debug_dump_myers_graph(const struct diff_data *l, const struct diff_data *r,
-				    int *kd)
+static inline void
+debug_dump_myers_graph(const struct diff_data *l, const struct diff_data *r,
+    int *kd)
 {
 	if (l->atoms.len > 99 || r->atoms.len > 99)
 		return;

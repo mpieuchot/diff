@@ -31,17 +31,6 @@
 
 #include "diff_main.h"
 
-#ifdef __linux__
-/* stupid shims to compile and test on linux */
-#define __dead
-
-static const char *
-getprogname()
-{
-	return "diff";
-}
-#endif
-
 __dead void	 usage(void);
 int		 diffreg(char *, char *, int);
 char		*mmapfile(const char *, struct stat *);

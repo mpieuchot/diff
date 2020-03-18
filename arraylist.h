@@ -20,22 +20,6 @@
 
 #pragma once
 
-#ifdef __linux__
-/* stupid shims to compile and test on linux */
-#include <strings.h>
-static inline void *reallocarray(void *buf, size_t n, size_t member_size)
-{
-	return realloc(buf, n * member_size);
-}
-static inline void *recallocarray(void *buf, size_t oldn, size_t n, size_t member_size)
-{
-	buf = reallocarray(buf, n, member_size);
-	bzero(((char*)buf) + (oldn * member_size), (n - oldn) * member_size);
-	return buf;
-}
-#endif
-
-
 /* Usage:
  *
  * ARRAYLIST_HEAD(head_type, any_type) list;

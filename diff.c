@@ -1,7 +1,7 @@
 /*	$OpenBSD$	*/
 
 /*
- * Copyright (c) 2018 Martin Pieuchot
+ * Copyright (c) 2018 Martin Pieuchot <mpi@openbsd.org>
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
  *
  * Permission to use, copy, modify, and distribute this software for any

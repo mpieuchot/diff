@@ -35,34 +35,6 @@ __dead void	 usage(void);
 int		 diffreg(char *, char *, int);
 char		*mmapfile(const char *, struct stat *);
 
-__dead void
-usage(void)
-{
-	fprintf(stderr, "usage: %s file1 file2\n", getprogname());
-	exit(1);
-}
-
-int
-main(int argc, char *argv[])
-{
-	int ch;
-
-	while ((ch = getopt(argc, argv, "")) != -1) {
-		switch (ch) {
-		default:
-			usage();
-		}
-	}
-
-	argc -= optind;
-	argv += optind;
-
-	if (argc != 2)
-		usage();
-
-	return diffreg(argv[0], argv[1], 0);
-}
-
 const struct diff_algo_config myers, patience, myers_divide;
 
 const struct diff_algo_config myers = {
@@ -91,6 +63,34 @@ const struct diff_config diff_config = {
 	.atomize_func = diff_atomize_text_by_line,
 	.algo = &myers,
 };
+
+__dead void
+usage(void)
+{
+	fprintf(stderr, "usage: %s file1 file2\n", getprogname());
+	exit(1);
+}
+
+int
+main(int argc, char *argv[])
+{
+	int ch;
+
+	while ((ch = getopt(argc, argv, "")) != -1) {
+		switch (ch) {
+		default:
+			usage();
+		}
+	}
+
+	argc -= optind;
+	argv += optind;
+
+	if (argc != 2)
+		usage();
+
+	return diffreg(argv[0], argv[1], 0);
+}
 
 int
 diffreg(char *file1, char *file2, int flags)

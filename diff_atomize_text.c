@@ -27,7 +27,6 @@ diff_data_atomize_text_lines(struct diff_data *d)
 	const uint8_t *end = pos + d->len;
 	unsigned int array_size_estimate = d->len / 50;
 	unsigned int pow2 = 1;
-	enum diff_rc rc;
 
 	while (array_size_estimate >>= 1)
 		pow2++;

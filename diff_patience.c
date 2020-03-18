@@ -431,8 +431,6 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 		debug("iteration %u  left_pos %u  left_idx %u  right_pos %u  right_idx %u\n",
 		    i, left_pos, left_idx, right_pos, right_idx);
 
-		struct diff_chunk *chunk;
-
 		/* Section before the matching atom */
 		struct diff_atom *left_atom = &left->atoms.head[left_pos];
 		unsigned int left_section_len = left_idx - left_pos;

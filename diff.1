@@ -23,6 +23,8 @@
 .Nd compare files
 .Sh SYNOPSIS
 .Nm diff
+.Op Fl u
+.Op Fl U Ar number
 .Ar file1 file2
 .Sh DESCRIPTION
 The
@@ -32,6 +34,18 @@ utility compares the contents of
 and
 .Ar file2
 line by line.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl u
+Produces a unified diff with 3 lines of context.
+.It Fl U Ar number
+Similar to
+.Fl u
+with
+.Ar number
+lines of context.
+.El
 .Sh EXIT STATUS
 The
 .Nm

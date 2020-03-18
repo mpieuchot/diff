@@ -25,6 +25,7 @@
 
 #include <err.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -32,8 +33,12 @@
 
 #include "diff_main.h"
 
+#define DEFAULT_CONTEXT	3
+
+#define F_UNIFIED	(1 << 0)
+
 __dead void	 usage(void);
-int		 diffreg(char *, char *, int);
+int		 diffreg(char *, char *, int, int);
 char		*mmapfile(const char *, struct stat *);
 
 const struct diff_algo_config myers, patience, myers_divide;
@@ -75,10 +80,21 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	int ch;
+	int ch, context = DEFAULT_CONTEXT, flags = 0;
+	long lval;
+	char *ep;
 
-	while ((ch = getopt(argc, argv, "")) != -1) {
+	while ((ch = getopt(argc, argv, "uU:")) != -1) {
 		switch (ch) {
+		case 'U':
+			lval = strtol(optarg, &ep, 10);
+			if (*ep != '\0' || lval < 0 || lval >= INT_MAX)
+				usage();
+			context = (int)lval;
+			/* FALLTHROUGH */
+		case 'u':
+			flags |= F_UNIFIED;
+			break;
 		default:
 			usage();
 		}
@@ -90,11 +106,11 @@ main(int argc, char *argv[])
 	if (argc != 2)
 		usage();
 
-	return diffreg(argv[0], argv[1], 0);
+	return diffreg(argv[0], argv[1], flags, context);
 }
 
 int
-diffreg(char *file1, char *file2, int flags)
+diffreg(char *file1, char *file2, int flags, int context)
 {
 	char *str1, *str2;
 	struct stat st1, st2;
@@ -106,8 +122,12 @@ diffreg(char *file1, char *file2, int flags)
 	str1 = mmapfile(file1, &st1);
 	str2 = mmapfile(file2, &st2);
 
-	diff_unidiff(stdout, &diff_config, &info, str1, st1.st_size, str2,
-	    st2.st_size, 3);
+	if (flags & F_UNIFIED)
+		diff_unidiff(stdout, &diff_config, &info, str1, st1.st_size,
+		    str2, st2.st_size, context);
+	else
+		diff_plain(stdout, &diff_config, &info, str1, st1.st_size,
+		    str2, st2.st_size);
 
 	munmap(str1, st1.st_size);
 	munmap(str2, st2.st_size);

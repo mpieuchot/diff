@@ -39,7 +39,7 @@ verify_diff_script() {
                         return 1
                 fi
         fi
-        echo "OK: $diff_prog $orig_left $orig_right"
+        echo "OK: $diff_prog -u $orig_left $orig_right"
         return 0
 }
 
@@ -48,7 +48,7 @@ for left in test*.left.* ; do
         expected_diff="$(echo "$left" | sed 's/test\([0-9]*\)\..*/expect\1.diff/')"
         got_diff="verify.$expected_diff"
 
-        "$diff_prog" "$left" "$right" > "$got_diff"
+        "$diff_prog" -u "$left" "$right" > "$got_diff"
 
         set -e
 	verify_diff_script "$left" "$right" "$got_diff"

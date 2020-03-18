@@ -404,7 +404,7 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 		if (i < lcs_count) {
 			atom = lcs[i];
 			atom_r = atom->patience.pos_in_other;
-			debug("lcs[%u] = left[%u] = right[%u]\n", i,
+			debug("lcs[%u] = left[%ld] = right[%ld]\n", i,
 			    diff_atom_idx(left, atom), diff_atom_idx(right, atom_r));
 			left_idx = atom->patience.identical_lines.start;
 			right_idx = atom_r->patience.identical_lines.start;

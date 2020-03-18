@@ -385,14 +385,21 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 	}
 
 
-	/* TODO: For each common-unique line found (now listed in lcs), swallow lines upwards and downwards that are
-	 * identical on each side. Requires a way to represent atoms being glued to adjacent atoms. */
-
+	/*
+	 * TODO: For each common-unique line found (now listed in lcs),
+	 * swallow lines upwards and downwards that are identical on each
+	 * side.  Requires a way to represent atoms being glued to adjacent
+	 * atoms.
+	 */
 	debug("\ntraverse LCS, possibly recursing:\n");
 
-	/* Now we have pinned positions in both files at which it makes sense to divide the diff problem into smaller
-	 * chunks. Go into the next round: look at each section in turn, trying to again find common-unique lines in
-	 * those smaller sections. As soon as no more are found, the remaining smaller sections are solved by Myers. */
+	/*
+	 * Now we have pinned positions in both files at which it makes sense
+	 * to divide the diff problem into smaller chunks. Go into the next
+	 * round: look at each section in turn, trying to again find
+	 * common-unique lines in those smaller sections. As soon as no more
+	 * are found, the remaining smaller sections are solved by Myers.
+	 */
 	unsigned int left_pos = 0;
 	unsigned int right_pos = 0;
 	for (i = 0; i <= lcs_count; i++) {
@@ -405,12 +412,15 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 			atom = lcs[i];
 			atom_r = atom->patience.pos_in_other;
 			debug("lcs[%u] = left[%ld] = right[%ld]\n", i,
-			    diff_atom_idx(left, atom), diff_atom_idx(right, atom_r));
+			    diff_atom_idx(left, atom),
+			    diff_atom_idx(right, atom_r));
 			left_idx = atom->patience.identical_lines.start;
 			right_idx = atom_r->patience.identical_lines.start;
 			debug(" identical lines l %u-%u  r %u-%u\n",
-			    atom->patience.identical_lines.start, atom->patience.identical_lines.end,
-			    atom_r->patience.identical_lines.start, atom_r->patience.identical_lines.end);
+			    atom->patience.identical_lines.start,
+			    atom->patience.identical_lines.end,
+			    atom_r->patience.identical_lines.start,
+			    atom_r->patience.identical_lines.end);
 		} else {
 			atom = NULL;
 			atom_r = NULL;
@@ -418,18 +428,25 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 			right_idx = right->atoms.len;
 		}
 
-		/* 'atom' now marks an atom that matches on both sides according to patience-diff
-		 * (a common-unique identical atom in both files).
-		 * Handle the section before and the atom itself; the section after will be handled by the next loop
-		 * iteration -- note that i loops to last element + 1 ("i <= lcs_count"), so that there will be another
-		 * final iteration to pick up the last remaining items after the last LCS atom.
+		/*
+		 * 'atom' now marks an atom that matches on both sides
+		 * according to patience-diff (a common-unique identical atom
+		 * in both files).  Handle the section before and the atom
+		 * itself; the section after will be handled by the next loop
+		 * iteration -- note that i loops to last element + 1
+		 * ("i <= lcs_count"), so that there will be another final
+		 * iteration to pick up the last remaining items after the last
+		 * LCS atom.
 		 * The sections before might also be empty on left and/or right.
-		 * left_pos and right_pos mark the indexes of the first atoms that have not yet been handled in the
+		 * left_pos and right_pos mark the indexes of the first atoms
+		 * that have not yet been handled in the
 		 * previous loop iteration.
-		 * left_idx and right_idx mark the indexes of the matching atom on left and right, respectively. */
-
-		debug("iteration %u  left_pos %u  left_idx %u  right_pos %u  right_idx %u\n",
-		    i, left_pos, left_idx, right_pos, right_idx);
+		 * left_idx and right_idx mark the indexes of the matching atom
+		 * on left and right, respectively.
+		 */
+		debug("iteration %u  left_pos %u  left_idx %u  right_pos %u"
+		    "  right_idx %u\n", i, left_pos, left_idx, right_pos,
+		    right_idx);
 
 		/* Section before the matching atom */
 		struct diff_atom *left_atom = &left->atoms.head[left_pos];
@@ -439,28 +456,44 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 		unsigned int right_section_len = right_idx - right_pos;
 
 		if (left_section_len && right_section_len) {
-			/* Record an unsolved chunk, the caller will apply inner_algo() on this chunk. */
+			/*
+			 * Record an unsolved chunk, the caller will apply
+			 * inner_algo() on this chunk.
+			 */
 			if (!diff_state_add_chunk(state, false,
 			    left_atom, left_section_len,
 			    right_atom, right_section_len))
 				goto return_rc;
 		} else if (left_section_len && !right_section_len) {
-			/* Only left atoms and none on the right, they form a "minus" chunk, then. */
+			/*
+			 * Only left atoms and none on the right, they form
+			 * a "minus" chunk, then.
+			 */
 			if (!diff_state_add_chunk(state, true,
 			    left_atom, left_section_len,
 			    right_atom, 0))
 				goto return_rc;
 		} else if (!left_section_len && right_section_len) {
-			/* No left atoms, only atoms on the right, they form a "plus" chunk, then. */
+			/*
+			 * No left atoms, only atoms on the right, they form
+			 * a "plus" chunk, then.
+			 */
 			if (!diff_state_add_chunk(state, true,
 			    left_atom, 0,
 			    right_atom, right_section_len))
 				goto return_rc;
 		}
-		/* else: left_section_len == 0 and right_section_len == 0, i.e. nothing here. */
+		/*
+		 * else: left_section_len == 0 and right_section_len == 0,
+		 * i.e. nothing here.
+		 */
 
-		/* The atom found to match on both sides forms a chunk of equals on each side. In the very last
-		 * iteration of this loop, there is no matching atom, we were just cleaning out the remaining lines. */
+		/*
+		 * The atom found to match on both sides forms a chunk of
+		 * equals on each side. In the very last iteration of this
+		 * loop, there is no matching atom, we were just cleaning out
+		 * the remaining lines.
+		 */
 		if (atom) {
 			if (!diff_state_add_chunk(state, true,
 			    left->atoms.head + atom->patience.identical_lines.start,
@@ -474,8 +507,9 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 			left_pos = left_idx + 1;
 			right_pos = right_idx + 1;
 		}
-		debug("end of iteration %u  left_pos %u  left_idx %u  right_pos %u  right_idx %u\n",
-		    i, left_pos, left_idx, right_pos, right_idx);
+		debug("end of iteration %u  left_pos %u  left_idx %u"
+		    "  right_pos %u  right_idx %u\n", i, left_pos, left_idx,
+		    right_pos, right_idx);
 	}
 	debug("** END %s\n", __func__);
 

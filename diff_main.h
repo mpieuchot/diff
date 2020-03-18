@@ -41,17 +41,20 @@ struct range {
 	int end;
 };
 
-static inline bool range_empty(const struct range *r)
+static inline bool
+range_empty(const struct range *r)
 {
 	return r->start == r->end;
 }
 
-static inline bool ranges_touch(const struct range *a, const struct range *b)
+static inline bool
+ranges_touch(const struct range *a, const struct range *b)
 {
 	return (a->end >= b->start) && (a->start <= b->end);
 }
 
-static inline void ranges_merge(struct range *a, const struct range *b)
+static inline void
+ranges_merge(struct range *a, const struct range *b)
 {
 	*a = (struct range){
 		.start = MIN(a->start, b->start),
@@ -59,7 +62,8 @@ static inline void ranges_merge(struct range *a, const struct range *b)
 	};
 }
 
-static inline int range_len(const struct range *r)
+static inline int
+range_len(const struct range *r)
 {
 	if (!r)
 		return 0;
@@ -79,8 +83,11 @@ struct diff_atom {
 	const uint8_t *at;
 	size_t len;
 
-	/* This hash is just a very cheap speed up for finding *mismatching* atoms. When hashes match, we still need to
-	 * compare entire atoms to find out whether they are indeed identical or not. */
+	/*
+	 * This hash is just a very cheap speed up for finding *mismatching*
+	 * atoms. When hashes match, we still need to compare entire atoms to
+	 * find out whether they are indeed identical or not.
+	 */
 	unsigned int hash;
 
 	/* State for the Patience Diff algorithm */
@@ -94,18 +101,23 @@ struct diff_atom {
 	} patience;
 };
 
-static inline bool diff_atom_same(const struct diff_atom *left, const struct diff_atom *right)
+static inline bool
+diff_atom_same(const struct diff_atom *left, const struct diff_atom *right)
 {
 	return left->hash == right->hash
 		&& left->len == right->len
 		&& memcmp(left->at, right->at, left->len) == 0;
 }
 
-/* For each file, there is a "root" struct diff_data referencing the entire file, which the atoms are parsed from. In
- * recursion of diff algorithm, there may be "child" struct diff_data only referencing a subsection of the file,
- * re-using the atoms parsing. For "root" structs, atoms_allocated will be nonzero, indicating that the array of atoms
- * is owned by that struct. For "child" structs, atoms_allocated == 0, to indicate that the struct is referencing a
- * subset of atoms. */
+/*
+ * For each file, there is a "root" struct diff_data referencing the entire
+ * file, which the atoms are parsed from.  In recursion of diff algorithm,
+ * there may be "child" struct diff_data only referencing a subsection of
+ * the file, re-using the atoms parsing. For "root" structs, atoms_allocated
+ * will be nonzero, indicating that the array of atoms is owned by that
+ * struct. For "child" structs, atoms_allocated == 0, to indicate that the
+ * struct is referencing a subset of atoms.
+ */
 struct diff_data {
 	const uint8_t *data;
 	size_t len;
@@ -115,14 +127,20 @@ struct diff_data {
 
 void diff_data_free(struct diff_data *diff_data);
 
-/* The atom's index in the entire file. For atoms divided by lines of text, this yields the line number (starting with
- * 0). Also works for diff_data that reference only a subsection of a file, always reflecting the global position in
- * the file (and not the relative position within the subsection). */
+/*
+ * The atom's index in the entire file. For atoms divided by lines of text,
+ * this yields the line number (starting with 0). Also works for diff_data
+ * that reference only a subsection of a file, always reflecting the global
+ * position in the file (and not the relative position within the subsection).
+ */
 #define diff_atom_root_idx(DIFF_DATA, ATOM) \
-	((ATOM) ? (ATOM) - ((DIFF_DATA)->root->atoms.head) : (DIFF_DATA)->root->atoms.len)
+	((ATOM) ? (ATOM) - ((DIFF_DATA)->root->atoms.head) : \
+	 	(DIFF_DATA)->root->atoms.len)
 
-/* The atom's index within DIFF_DATA. For atoms divided by lines of text, this yields the line number (starting with
- * 0). */
+/*
+ * The atom's index within DIFF_DATA. For atoms divided by lines of text,
+ * this yields the line number (starting with0).
+ */
 #define diff_atom_idx(DIFF_DATA, ATOM) \
 	((ATOM) ? (ATOM) - ((DIFF_DATA)->atoms.head) : (DIFF_DATA)->atoms.len)
 
@@ -139,28 +157,34 @@ void diff_data_free(struct diff_data *diff_data);
 	     (ATOM) && ((ATOM) >= (DIFF_DATA)->atoms.head) && ((ATOM) - (DIFF_DATA)->atoms.head < (DIFF_DATA)->atoms.len); \
 	     (ATOM)++)
 
-/* A diff chunk represents a set of atoms on the left and/or a set of atoms on the right.
+/*
+ * A diff chunk represents a set of atoms on the left and/or a set of atoms
+ * on the right.
  *
  * If solved == false:
- * The diff algorithm has divided the source file, and this is a chunk that the inner_algo should run on next.
+ * The diff algorithm has divided the source file, and this is a chunk that
+ * the inner_algo should run on next.
  * The lines on the left should be diffed against the lines on the right.
- * (If there are no left lines or no right lines, it implies solved == true, because there is nothing to diff.)
+ * (If there are no left lines or no right lines, it implies solved == true,
+ * because there is nothing to diff.)
  *
  * If solved == true:
- * If there are only left atoms, it is a chunk removing atoms from the left ("a minus chunk").
- * If there are only right atoms, it is a chunk adding atoms from the right ("a plus chunk").
- * If there are both left and right lines, it is a chunk of equal content on both sides,
- * and left_count == right_count:
+ * If there are only left atoms, it is a chunk removing atoms from the left
+ * ("a minus chunk").
+ * If there are only right atoms, it is a chunk adding atoms from the right
+ * ("a plus chunk").
+ * If there are both left and right lines, it is a chunk of equal content on
+ * both sides, and left_count == right_count:
  *
  * - foo  }
  * - bar  }-- diff_chunk{ left_start = &left.atoms.head[0], left_count = 3,
- * - baz  }               right_start = NULL, right_count = 0 }
+ * - baz  }            right_start = NULL, right_count = 0 }
  *   moo    }
  *   goo    }-- diff_chunk{ left_start = &left.atoms.head[3], left_count = 3,
- *   zoo    }               right_start = &right.atoms.head[0], right_count = 3 }
+ *   zoo    }            right_start = &right.atoms.head[0], right_count = 3 }
  *  +loo      }
  *  +roo      }-- diff_chunk{ left_start = NULL, left_count = 0,
- *  +too      }               right_start = &right.atoms.head[3], right_count = 3 }
+ *  +too      }            right_start = &right.atoms.head[3], right_count = 3 }
  *
  */
 struct diff_chunk {
@@ -185,28 +209,39 @@ struct diff_state {
 	/* The final result passed to the original diff caller. */
 	struct diff_result *result;
 
-	/* The root diff_data is in result->left,right, these are (possibly) subsections of the root data. */
+	/*
+	 * The root diff_data is in result->left,right, these are
+	 * (possibly) subsections of the root data.
+	 */
 	struct diff_data left;
 	struct diff_data right;
 
 	unsigned int recursion_depth_left;
 
-	/* Remaining chunks from one diff algorithm pass, if any solved == false chunks came up. */
+	/*
+	 * Remaining chunks from one diff algorithm pass, if any
+	 * solved == false chunks came up.
+	 */
 	struct diff_chunk_arraylist temp_result;
 };
 
 struct diff_chunk *diff_state_add_chunk(struct diff_state *state, bool solved,
-					struct diff_atom *left_start, unsigned int left_count,
-					struct diff_atom *right_start, unsigned int right_count);
+    struct diff_atom *left_start, unsigned int left_count,
+    struct diff_atom *right_start, unsigned int right_count);
 
-/* Signature of a utility function to divide both source files into diff atoms.
- * It is possible that a (future) algorithm requires both source files to decide on atom split points, hence this gets
- * both left and right to atomize at the same time.
+/*
+ * Signature of a utility function to divide both source files into diff
+ * atoms.
+ * It is possible that a (future) algorithm requires both source files to
+ * decide on atom split points, hence this gets both left and right to atomize
+ * at the same time.
  * An example is diff_atomize_text_by_line() in diff_atomize_text.c.
  *
  * func_data: context pointer (free to be used by implementation).
- * left: struct diff_data with left->data and left->len already set up, and left->atoms to be created.
- * right: struct diff_data with right->data and right->len already set up, and right->atoms to be created.
+ * left: struct diff_data with left->data and left->len already set up, and
+ *       left->atoms to be created.
+ * right: struct diff_data with right->data and right->len already set up,
+ *        and right->atoms to be created.
  */
 typedef enum diff_rc (*diff_atomize_func_t)(void *func_data, struct diff_data *left, struct diff_data *right);
 
@@ -215,19 +250,32 @@ extern enum diff_rc diff_atomize_text_by_line(void *func_data, struct diff_data 
 struct diff_algo_config;
 typedef enum diff_rc (*diff_algo_impl_t)(const struct diff_algo_config *algo_config, struct diff_state *state);
 
-/* Form a result with all left-side removed and all right-side added, i.e. no actual diff algorithm involved. */
+/*
+ * Form a result with all left-side removed and all right-side added,
+ * i.e. no actual diff algorithm involved.
+ */
 enum diff_rc diff_algo_none(const struct diff_algo_config *algo_config, struct diff_state *state);
 
-/* Myers Diff tracing from the start all the way through to the end, requiring quadratic amounts of memory. This can
- * fail if the required space surpasses algo_config->permitted_state_size. */
+/*
+ * Myers Diff tracing from the start all the way through to the end,
+ * requiring quadratic amounts of memory. This can fail if the required
+ * space surpasses algo_config->permitted_state_size.
+ */
 extern enum diff_rc diff_algo_myers(const struct diff_algo_config *algo_config, struct diff_state *state);
 
-/* Myers "Divide et Impera": tracing forwards from the start and backwards from the end to find a midpoint that divides
- * the problem into smaller chunks. Requires only linear amounts of memory. */
+/*
+ * Myers "Divide et Impera": tracing forwards from the start and backwards
+ * from the end to find a midpoint that divides the problem into smaller
+ * chunks. Requires only linear amounts of memory.
+ */
 extern enum diff_rc diff_algo_myers_divide(const struct diff_algo_config *algo_config, struct diff_state *state);
 
-/* Patience Diff algorithm, which divides a larger diff into smaller chunks. For very specific scenarios, it may lead to
- * a complete diff result by itself, but needs a fallback algo to solve chunks that don't have common-unique atoms. */
+/*
+ * Patience Diff algorithm, which divides a larger diff into smaller chunks.
+ * For very specific scenarios, it may lead to a complete diff result by
+ * itself, but needs a fallback algo to solve chunks that don't have
+ * common-unique atoms.
+ */
 extern enum diff_rc diff_algo_patience(const struct diff_algo_config *algo_config, struct diff_state *state);
 
 /* Diff algorithms to use, possibly nested. For example:
@@ -237,19 +285,19 @@ extern enum diff_rc diff_algo_patience(const struct diff_algo_config *algo_confi
  * myers = (struct diff_algo_config){
  *         .impl = diff_algo_myers,
  *         .permitted_state_size = 32 * 1024 * 1024,
- *         .fallback_algo = &patience, // when too large, do diff_algo_patience
+ *         .fallback_algo = &patience,   // when too large
  * };
  *
  * patience = (struct diff_algo_config){
  *         .impl = diff_algo_patience,
- *         .inner_algo = &patience,        // After subdivision, do Patience again.
- *         .fallback_algo = &myers_divide, // If subdivision failed, do Myers Divide et Impera.
+ *         .inner_algo = &patience,        // After subdivision
+ *         .fallback_algo = &myers_divide, // If subdivision failed
  * };
  *
  * myers_divide = (struct diff_algo_config){
  *         .impl = diff_algo_myers_divide,
- *         .inner_algo = &myers,           // When division succeeded, start from the top.
- *                                         // (fallback_algo = NULL implies diff_algo_none).
+ *         .inner_algo = &myers, // When division succeeded, start from the top.
+ *          .fallback_algo = NULL, // implies diff_algo_none
  * };
  *
  * struct diff_config config = {
@@ -261,15 +309,25 @@ extern enum diff_rc diff_algo_patience(const struct diff_algo_config *algo_confi
 struct diff_algo_config {
 	diff_algo_impl_t impl;
 
-	/* Fail this algo if it would use more than this amount of memory, and instead use fallback_algo
-	 * (diff_algo_myers). permitted_state_size == 0 means no limitation. */
+	/*
+	 * Fail this algo if it would use more than this amount of memory,
+	 * and instead use fallback_algo (diff_algo_myers).
+	 *
+	 * permitted_state_size == 0 means no limitation.
+	 */
 	size_t permitted_state_size;
 
-	/* For algorithms that divide into smaller chunks, use this algorithm to solve the divided chunks. */
+	/*
+	 * For algorithms that divide into smaller chunks, use this
+	 * algorithm to solve the divided chunks.
+	 */
 	const struct diff_algo_config *inner_algo;
 
-	/* If the algorithm fails (e.g. diff_algo_myers_if_small needs too large state, or diff_algo_patience can't find
-	 * any common-unique atoms), then use this algorithm instead. */
+	/*
+	 * If the algorithm fails (e.g. diff_algo_myers_if_small needs too
+	 * large state, or diff_algo_patience can't find any common-unique
+	 * atoms), then use this algorithm instead.
+	 */
 	const struct diff_algo_config *fallback_algo;
 };
 
@@ -279,9 +337,13 @@ struct diff_config {
 
 	const struct diff_algo_config *algo;
 
-	/* How deep to step into subdivisions of a source file, a paranoia / safety measure to guard against infinite
-	 * loops through diff algorithms. When the maximum recursion is reached, employ diff_algo_none (i.e. remove all
-	 * left atoms and add all right atoms). */
+	/*
+	 * How deep to step into subdivisions of a source file, a
+	 * paranoia / safety measure to guard against infinite loops
+	 * through diff algorithms.
+	 * When the maximum recursion is reached, employ diff_algo_none
+	 * (i.e. remove all left atoms and add all right atoms).
+	 */
 	unsigned int max_recursion_depth;
 };
 

@@ -32,33 +32,25 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "debug.h"
 #include "diff_main.h"
+#include "debug.h"
 
 #define DEFAULT_CONTEXT	3
 
 #define F_UNIFIED	(1 << 0)
 
-/* Diff output generators and invocation shims. */
 struct diff_input_info {
 	const char *left_path;
-	const char *left_buffer;
-	off_t left_size;
 	const char *right_path;
-	const char *right_buffer;
-	off_t right_size;
 };
-
 
 __dead void	 usage(void);
 int		 diffreg(char *, char *, int, int);
 char		*mmapfile(const char *, struct stat *);
 
-enum diff_rc diff_plain(FILE *dest, const struct diff_config *diff_config,
-			const struct diff_input_info *info);
-enum diff_rc diff_unidiff(FILE *dest, const struct diff_config *diff_config,
-			  const struct diff_input_info *info,
-			  unsigned int context_lines);
+void		 output_plain(FILE *, const struct diff_result *);
+void		 output_unidiff(FILE *, const struct diff_input_info *,
+		    const struct diff_result *, unsigned int);
 
 const struct diff_algo_config myers, patience, myers_divide;
 
@@ -133,25 +125,25 @@ diffreg(char *file1, char *file2, int flags, int context)
 {
 	char *str1, *str2;
 	struct stat st1, st2;
-	struct diff_input_info info;
+	struct diff_result *result;
 
 	str1 = mmapfile(file1, &st1);
 	str2 = mmapfile(file2, &st2);
 
-	info = (struct diff_input_info) {
-		.left_path = file1,
-		.left_buffer = str1,
-		.left_size = st1.st_size,
-		.right_path = file2,
-		.right_buffer = str2,
-		.right_size = st2.st_size,
-	};
+	result = diff_main(&diff_config, str1, st1.st_size, str2, st2.st_size);
+	if (result == NULL)
+		return DIFF_RC_EINVAL;
+	if (result->rc != DIFF_RC_OK)
+		return result->rc;
 
-	if (flags & F_UNIFIED)
-		diff_unidiff(stdout, &diff_config, &info, context);
-	else
-		diff_plain(stdout, &diff_config, &info);
+	if (flags & F_UNIFIED) {
+		struct diff_input_info info = { file1, file2 };
 
+		output_unidiff(stdout, &info, result, context);
+	} else
+		output_plain(stdout, result);
+
+	diff_result_free(result);
 	munmap(str1, st1.st_size);
 	munmap(str2, st2.st_size);
 
@@ -214,9 +206,8 @@ output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom,
 /*
  * Output all lines of a diff_result.
  */
-enum diff_rc
-output_plain(FILE *dest, const struct diff_input_info *info,
-    const struct diff_result *result)
+void
+output_plain(FILE *dest, const struct diff_result *result)
 {
 	int i;
 
@@ -233,30 +224,6 @@ output_plain(FILE *dest, const struct diff_input_info *info,
 			output_lines(dest, c->solved ? "+" : "?",
 			    c->right_start, c->right_count);
 	}
-	return DIFF_RC_OK;
-}
-
-enum diff_rc
-diff_plain(FILE *dest, const struct diff_config *diff_config,
-    const struct diff_input_info *info)
-{
-	struct diff_result *result;
-	int left_len, right_len;
-	enum diff_rc rc;
-
-	left_len = info->left_size;
-	right_len = info->right_size;
-	if (left_len < 0 || right_len < 0)
-		return DIFF_RC_EINVAL;
-	result = diff_main(diff_config, info->left_buffer, left_len,
-	    info->right_buffer, right_len);
-	if (result == NULL)
-		return DIFF_RC_EINVAL;
-	if (result->rc != DIFF_RC_OK)
-		return result->rc;
-	rc = output_plain(dest, info, result);
-	diff_result_free(result);
-	return rc;
 }
 
 /*
@@ -404,7 +371,7 @@ output_unidiff_chunk(FILE *dest, bool *header_printed,
 		    cc->left.end - chunk_end_line);
 }
 
-enum diff_rc
+void
 output_unidiff(FILE *dest, const struct diff_input_info *info,
     const struct diff_result *result, unsigned int context_lines)
 {
@@ -479,28 +446,4 @@ output_unidiff(FILE *dest, const struct diff_input_info *info,
 	if (!chunk_context_empty(&cc))
 		output_unidiff_chunk(dest, &header_printed, info, result,
 		    &cc);
-	return DIFF_RC_OK;
-}
-
-enum diff_rc
-diff_unidiff(FILE *dest, const struct diff_config *diff_config,
-    const struct diff_input_info *info, unsigned int context_lines)
-{
-	struct diff_result *result;
-	int left_len, right_len;
-	enum diff_rc rc;
-
-	left_len = info->left_size;
-	right_len = info->right_size;
-	if (left_len < 0 || right_len < 0)
-		return DIFF_RC_EINVAL;
-	result = diff_main(diff_config, info->left_buffer, left_len,
-	    info->right_buffer, right_len);
-	if (result == NULL)
-		return DIFF_RC_EINVAL;
-	if (result->rc != DIFF_RC_OK)
-		return result->rc;
-	rc = output_unidiff(dest, info, result, context_lines);
-	diff_result_free(result);
-	return rc;
 }

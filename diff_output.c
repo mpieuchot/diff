@@ -31,7 +31,6 @@ enum diff_rc diff_output_plain(FILE *dest, const struct diff_input_info *info,
 			       const struct diff_result *result);
 enum diff_rc diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
 				 const struct diff_result *result, unsigned int context_lines);
-enum diff_rc diff_output_info(FILE *dest, const struct diff_input_info *info);
 void diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom, unsigned int count);
 
 void
@@ -62,15 +61,6 @@ diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom,
 	}
 }
 
-enum diff_rc
-diff_output_info(FILE *dest, const struct diff_input_info *info)
-{
-	fprintf(dest, "--- %s\n+++ %s\n",
-	    info->left_path ? : "a",
-	    info->right_path ? : "b");
-	return DIFF_RC_OK;
-}
-
 /*
  * Output all lines of a diff_result.
  */
@@ -79,8 +69,6 @@ diff_output_plain(FILE *dest, const struct diff_input_info *info,
     const struct diff_result *result)
 {
 	int i;
-
-	diff_output_info(dest, info);
 
 	for (i = 0; i < result->chunks.len; i++) {
 		struct diff_chunk *c = &result->chunks.head[i];
@@ -204,7 +192,7 @@ chunk_contexts_merge(struct chunk_context *cc, const struct chunk_context *other
 }
 
 static void
-diff_output_unidiff_chunk(FILE *dest, bool *info_printed,
+diff_output_unidiff_chunk(FILE *dest, bool *header_printed,
     const struct diff_input_info *info, const struct diff_result *result,
     const struct chunk_context *cc)
 {
@@ -214,9 +202,10 @@ diff_output_unidiff_chunk(FILE *dest, bool *info_printed,
 	if (range_empty(&cc->left) && range_empty(&cc->right))
 		return;
 
-	if (!(*info_printed)) {
-		diff_output_info(dest, info);
-		*info_printed = true;
+	if (!(*header_printed)) {
+		fprintf(dest, "--- %s\n+++ %s\n",
+		    info->left_path ? : "a", info->right_path ? : "b");
+		*header_printed = true;
 	}
 
 	fprintf(dest, "@@ -%d,%d +%d,%d @@\n",
@@ -270,7 +259,7 @@ diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
     const struct diff_result *result, unsigned int context_lines)
 {
 	struct chunk_context cc = {};
-	bool info_printed = false;
+	bool header_printed = false;
 	int i;
 
 	for (i = 0; i < result->chunks.len; i++) {
@@ -328,7 +317,7 @@ diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
 		debug("new chunk to be printed does not touch previous chunk;"
 		    " print left %d-%d right %d-%d\n", cc.left.start,
 		    cc.left.end, cc.right.start, cc.right.end);
-		diff_output_unidiff_chunk(dest, &info_printed, info, result,
+		diff_output_unidiff_chunk(dest, &header_printed, info, result,
 		    &cc);
 
 		cc = next;
@@ -338,7 +327,7 @@ diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
 	}
 
 	if (!chunk_context_empty(&cc))
-		diff_output_unidiff_chunk(dest, &info_printed, info, result,
+		diff_output_unidiff_chunk(dest, &header_printed, info, result,
 		    &cc);
 	return DIFF_RC_OK;
 }

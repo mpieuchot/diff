@@ -236,11 +236,10 @@ diff_main(const struct diff_config *config,
 	struct diff_result *result;
 	struct diff_state state;
 
-	result = malloc(sizeof(struct diff_result));
+	result = calloc(1, sizeof(struct diff_result));
 	if (result == NULL)
 		return NULL;
 
-	*result = (struct diff_result){};
 	diff_data_init_root(&result->left, left_data, left_len);
 	diff_data_init_root(&result->right, right_data, right_len);
 

@@ -120,21 +120,21 @@ diff_algo_none(const struct diff_algo_config *algo_config,
 	/* Add a chunk of equal lines, if any */
 	while (equal_atoms < state->left.atoms.len &&
 	    equal_atoms < state->right.atoms.len &&
-	    diff_atom_same(&state->left.atoms.head[equal_atoms],
-	    &state->right.atoms.head[equal_atoms]))
+	    diff_atom_same(DD_ATOM_AT(&state->left, equal_atoms),
+	    DD_ATOM_AT(&state->right, equal_atoms)))
 		equal_atoms++;
 
 	if (equal_atoms) {
 		if (!diff_state_add_chunk(state, true,
-		    &state->left.atoms.head[0], equal_atoms,
-		    &state->right.atoms.head[0], equal_atoms))
+		    DD_ATOM_AT(&state->left, 0), equal_atoms,
+		    DD_ATOM_AT(&state->right, 0), equal_atoms))
 			return DIFF_RC_ENOMEM;
 	}
 
 	/* Add a "minus" chunk with all lines from the left. */
 	if (equal_atoms < state->left.atoms.len) {
 		if (!diff_state_add_chunk(state, true,
-		    &state->left.atoms.head[equal_atoms],
+		    DD_ATOM_AT(&state->left, equal_atoms),
 		    state->left.atoms.len - equal_atoms,
 		    NULL, 0))
 			return DIFF_RC_ENOMEM;
@@ -144,7 +144,7 @@ diff_algo_none(const struct diff_algo_config *algo_config,
 	if (equal_atoms < state->right.atoms.len) {
 		if (!diff_state_add_chunk(state, true,
 		    NULL, 0,
-		    &state->right.atoms.head[equal_atoms],
+		    DD_ATOM_AT(&state->right, equal_atoms),
 		    state->right.atoms.len - equal_atoms))
 			return DIFF_RC_ENOMEM;
 	}

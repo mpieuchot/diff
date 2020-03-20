@@ -248,8 +248,8 @@ chunk_context_get(struct chunk_context *cc, const struct output_info *info,
 	if (info->flags & F_UNIFIED)
 		context_lines = info->context;
 
-	left_start = diff_atom_root_idx(&r->left, c->left_start);
-	right_start = diff_atom_root_idx(&r->right, c->right_start);
+	left_start = DD_ROOT_INDEX(&r->left, c->left_start);
+	right_start = DD_ROOT_INDEX(&r->right, c->right_start);
 
 	*cc = (struct chunk_context) {
 		.chunk = {
@@ -323,11 +323,11 @@ print_chunk(bool *header_printed, const struct output_info *info,
 	 * so it suffices to look on the left.
 	 */
 	first_chunk = &result->chunks.head[cc->chunk.start];
-	chunk_start_line = diff_atom_root_idx(&result->left,
+	chunk_start_line = DD_ROOT_INDEX(&result->left,
 	    first_chunk->left_start);
 
 	if (cc->left.start < chunk_start_line)
-		print_lines(" ", &result->left.atoms.head[cc->left.start],
+		print_lines(" ", DD_ATOM_AT(&result->left, cc->left.start),
 		    chunk_start_line - cc->left.start);
 
 	/* Now write out all the joined chunks and contexts between them */
@@ -347,10 +347,10 @@ print_chunk(bool *header_printed, const struct output_info *info,
 
 	/* Trailing context? */
 	last_chunk = &result->chunks.head[cc->chunk.end - 1];
-	chunk_end_line = diff_atom_root_idx(&result->left,
+	chunk_end_line = DD_ROOT_INDEX(&result->left,
 	    last_chunk->left_start + last_chunk->left_count);
 	if (cc->left.end > chunk_end_line)
-		print_lines(" ", &result->left.atoms.head[chunk_end_line],
+		print_lines(" ", DD_ATOM_AT(&result->left, chunk_end_line),
 		    cc->left.end - chunk_end_line);
 }
 

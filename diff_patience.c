@@ -30,29 +30,29 @@
 
 /* Set unique_here = true for all atoms that exist exactly once in this list. */
 static void
-diff_atoms_mark_unique(struct diff_data *d, unsigned int *unique_count)
+diff_atoms_mark_unique(struct diff_data *dd, unsigned int *unique_count)
 {
-	struct diff_atom *i, *j;
+	struct diff_atom *atom, *anext;
 	unsigned int count = 0;
 
-	diff_data_foreach_atom(i, d) {
-		i->patience.unique_here = true;
-		i->patience.unique_in_both = true;
+	DD_ATOM_FOREACH(atom, dd, 0) {
+		atom->patience.unique_here = true;
+		atom->patience.unique_in_both = true;
 		count++;
 	}
-	diff_data_foreach_atom(i, d) {
-		if (!i->patience.unique_here)
+	DD_ATOM_FOREACH(atom, dd, 0) {
+		if (!atom->patience.unique_here)
 			continue;
 
-		diff_data_foreach_atom_from(i + 1, j, d) {
-			if (diff_atom_same(i, j)) {
-				if (i->patience.unique_here) {
-					i->patience.unique_here = false;
-					i->patience.unique_in_both = false;
+		DD_ATOM_FOREACH(anext, dd, DD_ATOM_INDEX(dd, atom + 1)) {
+			if (diff_atom_same(atom, anext)) {
+				if (atom->patience.unique_here) {
+					atom->patience.unique_here = false;
+					atom->patience.unique_in_both = false;
 					count--;
 				}
-				j->patience.unique_here = false;
-				j->patience.unique_in_both = false;
+				anext->patience.unique_here = false;
+				anext->patience.unique_in_both = false;
 				count--;
 			}
 		}
@@ -70,7 +70,7 @@ diff_atoms_mark_unique_in_both(struct diff_data *left, struct diff_data *right,
     unsigned int *unique_in_both_count)
 {
 	unsigned int unique_in_both;
-	struct diff_atom *i, *j;
+	struct diff_atom *atom, *j;
 	int found_in_b;
 	bool found_in_a;
 
@@ -84,29 +84,29 @@ diff_atoms_mark_unique_in_both(struct diff_data *left, struct diff_data *right,
 
 	debug("unique_in_both %u\n", unique_in_both);
 
-	diff_data_foreach_atom(i, left) {
-		if (!i->patience.unique_here)
+	DD_ATOM_FOREACH(atom, left, 0) {
+		if (!atom->patience.unique_here)
 			continue;
 		found_in_b = 0;
-		diff_data_foreach_atom(j, right) {
-			if (!diff_atom_same(i, j))
+		DD_ATOM_FOREACH(j, right, 0) {
+			if (!diff_atom_same(atom, j))
 				continue;
 			if (!j->patience.unique_here) {
 				found_in_b = 2; /* or more */
 				break;
 			} else {
 				found_in_b = 1;
-				j->patience.pos_in_other = i;
-				i->patience.pos_in_other = j;
+				j->patience.pos_in_other = atom;
+				atom->patience.pos_in_other = j;
 			}
 		}
 
 		if (found_in_b == 0 || found_in_b > 1) {
-			i->patience.unique_in_both = false;
+			atom->patience.unique_in_both = false;
 			unique_in_both--;
 			debug("unique_in_both %u  (%d) ", unique_in_both,
 			    found_in_b);
-			debug_dump_atom(left, NULL, i);
+			debug_dump_atom(left, NULL, atom);
 		}
 	}
 
@@ -114,22 +114,22 @@ diff_atoms_mark_unique_in_both(struct diff_data *left, struct diff_data *right,
 	 * Still need to unmark right[*]->patience.unique_in_both for
 	 * atoms that don't exist in left
 	 */
-	diff_data_foreach_atom(i, right) {
-		if (!i->patience.unique_here ||
-		    !i->patience.unique_in_both)
+	DD_ATOM_FOREACH(atom, right, 0) {
+		if (!atom->patience.unique_here ||
+		    !atom->patience.unique_in_both)
 			continue;
 		found_in_a = false;
-		diff_data_foreach_atom(j, left) {
+		DD_ATOM_FOREACH(j, left, 0) {
 			if (!j->patience.unique_in_both)
 				continue;
-			if (!diff_atom_same(i, j))
+			if (!diff_atom_same(atom, j))
 				continue;
 			found_in_a = true;
 			break;
 		}
 
 		if (!found_in_a)
-			i->patience.unique_in_both = false;
+			atom->patience.unique_in_both = false;
 	}
 
 	if (unique_in_both_count)
@@ -150,7 +150,7 @@ diff_atoms_swallow_identical_neighbors(struct diff_data *left,
 	debug("trivially combine identical lines around unique_in_both lines\n");
 
 	for (l_idx = 0; l_idx < left->atoms.len; l_idx = next_l_idx) {
-		struct diff_atom *l = &left->atoms.head[l_idx];
+		struct diff_atom *l = DD_ATOM_AT(left, l_idx);
 
 		next_l_idx = l_idx + 1;
 		if (!l->patience.unique_in_both)
@@ -159,7 +159,7 @@ diff_atoms_swallow_identical_neighbors(struct diff_data *left,
 		debug("check identical lines around ");
 		debug_dump_atom(left, right, l);
 
-		r_idx = diff_atom_idx(right, l->patience.pos_in_other);
+		r_idx = DD_ATOM_INDEX(right, l->patience.pos_in_other);
 
 
 		/* Swallow upwards.
@@ -173,8 +173,8 @@ diff_atoms_swallow_identical_neighbors(struct diff_data *left,
 		 */
 		for (identical_l.start = l_idx, identical_r.start = r_idx;
 		    (identical_l.start > l_min && identical_r.start > r_min &&
-		    diff_atom_same(&left->atoms.head[identical_l.start - 1],
-			&right->atoms.head[identical_r.start - 1]));
+		    diff_atom_same(DD_ATOM_AT(left, identical_l.start - 1),
+			DD_ATOM_AT(right, identical_r.start - 1)));
 		    identical_l.start--, identical_r.start--)
 		    	;
 
@@ -182,16 +182,16 @@ diff_atoms_swallow_identical_neighbors(struct diff_data *left,
 		for (identical_l.end = l_idx + 1, identical_r.end = r_idx + 1;
 		    (identical_l.end < left->atoms.len &&
 		    identical_r.end < right->atoms.len &&
-		    diff_atom_same(&left->atoms.head[identical_l.end],
-			&right->atoms.head[identical_r.end]));
+		    diff_atom_same(DD_ATOM_AT(left, identical_l.end),
+			DD_ATOM_AT(right, identical_r.end)));
 		    identical_l.end++, identical_r.end++, next_l_idx++) {
-			if (left->atoms.head[identical_l.end].patience.unique_in_both) {
+			if (DD_ATOM_AT(left, identical_l.end)->patience.unique_in_both) {
 				/*
 				 * Part of a chunk of identical lines, remove
 				 * from listing of unique_in_both lines
 				 */
-				left->atoms.head[identical_l.end].patience.unique_in_both = false;
-				right->atoms.head[identical_r.end].patience.unique_in_both = false;
+				DD_ATOM_AT(left, identical_l.end)->patience.unique_in_both = false;
+				DD_ATOM_AT(right, identical_r.end)->patience.unique_in_both = false;
 				(*unique_in_both_count)--;
 			}
 		}
@@ -296,7 +296,7 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 
 		/* Take all common, unique items from 'left' ... */
 		uniques_end = uniques;
-		diff_data_foreach_atom(atom, left) {
+		DD_ATOM_FOREACH(atom, left, 0) {
 			if (!atom->patience.unique_in_both)
 				continue;
 			*uniques_end = atom;
@@ -414,8 +414,8 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 			atom = lcs[i];
 			atom_r = atom->patience.pos_in_other;
 			debug("lcs[%u] = left[%ld] = right[%ld]\n", i,
-			    diff_atom_idx(left, atom),
-			    diff_atom_idx(right, atom_r));
+			    DD_ATOM_INDEX(left, atom),
+			    DD_ATOM_INDEX(right, atom_r));
 			left_idx = atom->patience.identical_lines.start;
 			right_idx = atom_r->patience.identical_lines.start;
 			debug(" identical lines l %u-%u  r %u-%u\n",
@@ -451,10 +451,10 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 		    right_idx);
 
 		/* Section before the matching atom */
-		struct diff_atom *left_atom = &left->atoms.head[left_pos];
+		struct diff_atom *left_atom = DD_ATOM_AT(left, left_pos);
 		unsigned int left_section_len = left_idx - left_pos;
 
-		struct diff_atom *right_atom = &(right->atoms.head[right_pos]);
+		struct diff_atom *right_atom = DD_ATOM_AT(right, right_pos);
 		unsigned int right_section_len = right_idx - right_pos;
 
 		if (left_section_len && right_section_len) {
@@ -498,9 +498,9 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 		 */
 		if (atom) {
 			if (!diff_state_add_chunk(state, true,
-			    left->atoms.head + atom->patience.identical_lines.start,
+			    DD_ATOM_AT(left, atom->patience.identical_lines.start),
 			    range_len(&atom->patience.identical_lines),
-			    right->atoms.head + atom_r->patience.identical_lines.start,
+			    DD_ATOM_AT(right, atom_r->patience.identical_lines.start),
 			    range_len(&atom_r->patience.identical_lines)))
 				goto return_rc;
 			left_pos = atom->patience.identical_lines.end;

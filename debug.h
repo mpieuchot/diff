@@ -38,9 +38,9 @@ dump_atom(const struct diff_data *left, const struct diff_data *right, const str
 		return;
 	}
 	if (left)
-		print(" %3ld", diff_atom_root_idx(left, atom));
+		print(" %3ld", DD_ROOT_INDEX(left, atom));
 	if (right && atom->patience.pos_in_other)
-		print(" %3ld", diff_atom_root_idx(right,
+		print(" %3ld", DD_ROOT_INDEX(right,
 		    atom->patience.pos_in_other));
 
 	print(" %s%s '", atom->patience.unique_here ? "u" : " ",
@@ -75,9 +75,9 @@ dump_atoms(const struct diff_data *d, struct diff_atom *atom, unsigned int count
 }
 
 static inline void
-dump(struct diff_data *d)
+dump(struct diff_data *dd)
 {
-	dump_atoms(d, d->atoms.head, d->atoms.len);
+	dump_atoms(dd, dd->atoms.head, dd->atoms.len);
 }
 
 static inline void
@@ -129,7 +129,7 @@ dump_myers_graph(const struct diff_data *l, const struct diff_data *r, int *kd)
 
 		print("   ");
 		for (x = 0; x < l->atoms.len; x++) {
-			if (diff_atom_same(&l->atoms.head[x], &r->atoms.head[y]))
+			if (diff_atom_same(DD_ATOM_AT(l, x), DD_ATOM_AT(r, y)))
 				print("|\\");
 			else
 				print("| ");

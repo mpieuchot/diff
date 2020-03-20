@@ -127,35 +127,45 @@ struct diff_data {
 
 void diff_data_free(struct diff_data *diff_data);
 
-/*
- * The atom's index in the entire file. For atoms divided by lines of text,
- * this yields the line number (starting with 0). Also works for diff_data
- * that reference only a subsection of a file, always reflecting the global
- * position in the file (and not the relative position within the subsection).
- */
-#define diff_atom_root_idx(DIFF_DATA, ATOM) \
-	((ATOM) ? (ATOM) - ((DIFF_DATA)->root->atoms.head) : \
-	 	(DIFF_DATA)->root->atoms.len)
+#define foreach_diff_atom(_atom, _first, _count) \
+	for ((_atom) = (_first); \
+	     (_atom) && ((_atom) >= (_first)) && \
+	     ((_atom) - (_first) < (_count)); \
+	     (_atom)++)
 
 /*
- * The atom's index within DIFF_DATA. For atoms divided by lines of text,
- * this yields the line number (starting with0).
+ * Get Atom from `_dd' at given `_index'.
  */
-#define diff_atom_idx(DIFF_DATA, ATOM) \
-	((ATOM) ? (ATOM) - ((DIFF_DATA)->atoms.head) : (DIFF_DATA)->atoms.len)
+#define DD_ATOM_AT(_dd, _index)	(&(_dd)->atoms.head[(_index)])
 
-#define foreach_diff_atom(ATOM, FIRST_ATOM, COUNT) \
-	for ((ATOM) = (FIRST_ATOM); \
-	     (ATOM) && ((ATOM) >= (FIRST_ATOM)) && ((ATOM) - (FIRST_ATOM) < (COUNT)); \
-	     (ATOM)++)
+/*
+ * Atom index within `_dd'.
+ *
+ * For atoms divided by lines of text,  this yields the line number
+ * (starting with 0).
+ */
+#define DD_ATOM_INDEX(_dd, _atom) \
+	((_atom) != NULL ? (_atom) - ((_dd)->atoms.head) : (_dd)->atoms.len)
 
-#define diff_data_foreach_atom(ATOM, DIFF_DATA) \
-	foreach_diff_atom(ATOM, (DIFF_DATA)->atoms.head, (DIFF_DATA)->atoms.len)
+/*
+ * Atom index in the entire file.
+ *
+ * For atoms divided by lines of text, this yields the line number
+ * (starting with 0).  Also works for diff_data that reference only a
+ * subsection of a file, always reflecting the global position in the
+ * file (and not the relative position within the subsection).
+ */
+#define DD_ROOT_INDEX(_dd, _atom)	DD_ATOM_INDEX((_dd)->root, (_atom))
 
-#define diff_data_foreach_atom_from(FROM, ATOM, DIFF_DATA) \
-	for ((ATOM) = (FROM); \
-	     (ATOM) && ((ATOM) >= (DIFF_DATA)->atoms.head) && ((ATOM) - (DIFF_DATA)->atoms.head < (DIFF_DATA)->atoms.len); \
-	     (ATOM)++)
+/*
+ * Iterate over all atoms from `_dd' starting at index `_index'.
+ */
+#define DD_ATOM_FOREACH(_atom, _dd, _index) 				\
+	for ((_atom) = DD_ATOM_AT(_dd, _index);				\
+	     (_atom) &&							\
+	     ((_atom) >= (_dd)->atoms.head) &&				\
+	     ((_atom) - (_dd)->atoms.head < (_dd)->atoms.len);		\
+	     (_atom)++)
 
 /*
  * A diff chunk represents a set of atoms on the left and/or a set of atoms

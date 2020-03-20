@@ -318,8 +318,8 @@ diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
 		/* Slide down any snake that we might find here. */
 		while (x < left->atoms.len &&
 		    xk_to_y(x, k) < right->atoms.len &&
-		    diff_atom_same(&left->atoms.head[x],
-		      &right->atoms.head[xk_to_y(x, k)]))
+		    diff_atom_same(DD_ATOM_AT(left, x),
+		      DD_ATOM_AT(right, xk_to_y(x, k))))
 			x++;
 		kd_forward[k] = x;
 
@@ -332,13 +332,13 @@ diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
 				if (kd_forward[fi] >= 0 &&
 				    kd_forward[fi] < left->atoms.len)
 					debug_dump_atom(left, right,
-					    &left->atoms.head[kd_forward[fi]]);
+					    DD_ATOM_AT(left, kd_forward[fi]));
 				else
 					debug("\n");
 				if (kd_forward[fi]-fi >= 0 &&
 				    kd_forward[fi]-fi < right->atoms.len)
 					debug_dump_atom(right, left,
-					    &right->atoms.head[kd_forward[fi]
+					    DD_ATOM_AT(right, kd_forward[fi)
 					    - fi]);
 				else
 					debug("\n");
@@ -606,16 +606,16 @@ diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
 		    xc_to_y(x, c, delta), xc_to_y(x, c, delta)-1);
 		if (x > 0) {
 			debug("  l="); debug_dump_atom(left, right,
-			    &left->atoms.head[x-1]);
+			    DD_ATOM_AT(left, x-1));
 		}
 		if (xc_to_y(x, c, delta) > 0) {
 			debug("   r=");
 			debug_dump_atom(right, left,
-			    &right->atoms.head[xc_to_y(x, c, delta)-1]);
+			    DD_ATOM_AT(right, xc_to_y(x, c, delta)-1));
 		}
 		while (x > 0 && xc_to_y(x, c, delta) > 0 &&
-		    diff_atom_same(&left->atoms.head[x - 1],
-		      &right->atoms.head[xc_to_y(x, c, delta) - 1]))
+		    diff_atom_same(DD_ATOM_AT(left, x - 1),
+		      DD_ATOM_AT(right, xc_to_y(x, c, delta) - 1)))
 			x--;
 		kd_backward[c] = x;
 
@@ -629,13 +629,13 @@ diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
 				if (kd_backward[fi] >= 0 &&
 				    kd_backward[fi] < left->atoms.len)
 					debug_dump_atom(left, right,
-					    &left->atoms.head[kd_backward[fi]]);
+					    DD_ATOM_AT(left, kd_backward[fi]));
 				else
 					debug("\n");
 				if (kd_backward[fi]-fi+delta >= 0 &&
 				    kd_backward[fi]-fi+delta < right->atoms.len)
 					debug_dump_atom(right, left,
-					    &right->atoms.head[kd_backward[fi]-fi+delta]);
+					    DD_ATOM_AT(right, kd_backward[fi]-fi+delta));
 				else
 					debug("\n");
 #endif
@@ -808,9 +808,9 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 		/* Section before the mid-snake.  */
 		debug("Section before the mid-snake\n");
 
-		struct diff_atom *left_atom = &left->atoms.head[0];
+		struct diff_atom *left_atom = DD_ATOM_AT(left, 0);
 		unsigned int left_section_len = mid_snake.left_start;
-		struct diff_atom *right_atom = &right->atoms.head[0];
+		struct diff_atom *right_atom = DD_ATOM_AT(right, 0);
 		unsigned int right_section_len = mid_snake.right_start;
 
 		if (left_section_len && right_section_len) {
@@ -849,9 +849,9 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 		/* the mid-snake, identical data on both sides: */
 		debug("the mid-snake\n");
 		if (!diff_state_add_chunk(state, true,
-		    &left->atoms.head[mid_snake.left_start],
+		    DD_ATOM_AT(left, mid_snake.left_start),
 		    mid_snake.left_end - mid_snake.left_start,
-		    &right->atoms.head[mid_snake.right_start],
+		    DD_ATOM_AT(right, mid_snake.right_start),
 		    mid_snake.right_end - mid_snake.right_start))
 			goto return_rc;
 
@@ -862,9 +862,9 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 		debug("  left_count %u  right_count %u\n", left->atoms.len,
 		    right->atoms.len);
 
-		left_atom = &left->atoms.head[mid_snake.left_end];
+		left_atom = DD_ATOM_AT(left, mid_snake.left_end);
 		left_section_len = left->atoms.len - mid_snake.left_end;
-		right_atom = &right->atoms.head[mid_snake.right_end];
+		right_atom = DD_ATOM_AT(right, mid_snake.right_end);
 		right_section_len = right->atoms.len - mid_snake.right_end;
 
 		if (left_section_len && right_section_len) {
@@ -1070,8 +1070,8 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 			/* Slide down any snake that we might find here. */
 			while (x < left->atoms.len &&
 			    xk_to_y(x, k) < right->atoms.len &&
-			    diff_atom_same(&left->atoms.head[x],
-			      &right->atoms.head[xk_to_y(x, k)]))
+			    diff_atom_same(DD_ATOM_AT(left, x),
+			      DD_ATOM_AT(right, xk_to_y(x, k))))
 				x++;
 			kd_column[k] = x;
 
@@ -1084,13 +1084,13 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 					if (kd_column[fi] >= 0 &&
 					    kd_column[fi] < left->atoms.len)
 						debug_dump_atom(left, right,
-						    &left->atoms.head[kd_column[fi]]);
+						    DD_ATOM_AT(left, kd_column[fi]));
 					else
 						debug("\n");
 					if (kd_column[fi]-fi >= 0 &&
 					    kd_column[fi]-fi < right->atoms.len)
 						debug_dump_atom(right, left,
-						    &right->atoms.head[kd_column[fi]-fi]);
+						    DD_ATOM_AT(right, kd_column[fi]-fi));
 					else
 						debug("\n");
 #endif
@@ -1208,9 +1208,9 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 		debug("Forward track from xy(%d,%d) to xy(%d,%d)\n",
 		    x, y, next_x, next_y);
 
-		struct diff_atom *left_atom = &left->atoms.head[x];
+		struct diff_atom *left_atom = DD_ATOM_AT(left, x);
 		int left_section_len = next_x - x;
-		struct diff_atom *right_atom = &right->atoms.head[y];
+		struct diff_atom *right_atom = DD_ATOM_AT(right, y);
 		int right_section_len = next_y - y;
 
 		rc = DIFF_RC_ENOMEM;

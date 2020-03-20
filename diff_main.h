@@ -354,7 +354,6 @@ void diff_result_free(struct diff_result *result);
 
 /* Diff output generators and invocation shims. */
 struct diff_input_info {
-	const char *arbitrary_info;
 	const char *left_path;
 	const char *left_buffer;
 	off_t left_size;

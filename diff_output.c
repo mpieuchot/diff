@@ -65,8 +65,6 @@ diff_output_lines(FILE *dest, const char *prefix, struct diff_atom *start_atom,
 enum diff_rc
 diff_output_info(FILE *dest, const struct diff_input_info *info)
 {
-	if (info->arbitrary_info && *info->arbitrary_info)
-		fprintf(dest, "%s", info->arbitrary_info);
 	fprintf(dest, "--- %s\n+++ %s\n",
 	    info->left_path ? : "a",
 	    info->right_path ? : "b");

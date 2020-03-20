@@ -401,78 +401,77 @@ diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
 		 * d - 1. Can't do this for d == 0.
 		 */
 		int backwards_d = d - 1;
-		if ((delta & 1) && (backwards_d >= 0)) {
-			debug("backwards_d = %d\n", backwards_d);
+		if ((delta & 1) == 0 || (backwards_d < 0))
+			continue;
 
-			/*
-			 * If both sides have the same length, forward and
-			 * backward start on the same diagonal, meaning the
-			 * backwards state index c == k.
-			 * As soon as the lengths are not the same, the
-			 * backwards traversal starts on a different diagonal,
-			 * and c = k shifted by the difference in length.
-			 */
-			int c = k_to_c(k, delta);
+		debug("backwards_d = %d\n", backwards_d);
 
-			/*
-			 * When the file sizes are very different, the
-			 * traversal trees start on far distant diagonals.
-			 * They don't necessarily meet straight on. See whether
-			 * this forward value is on a diagonal that is also
-			 * valid in kd_backward[], and match them if so.
-			 */
-			if (c >= -backwards_d && c <= backwards_d) {
-				/*
-				 * Current k is on a diagonal that exists in
-				 * kd_backward[]. If the two x positions have
-				 * met or passed (forward walked onto or past
-				 * backward), then we've found a midpoint / a
-				 * mid-box.
-				 *
-				 * But we need to avoid matching a situation
-				 * like this:
-				 *
-				 *       0  1
-				 *        x y
-				 *   0   o-o-o
-				 *     x |\| |
-				 *   1   o-o-o
-				 *     y | |\|
-				 *   2  (B)o-o  <--(B) backwards traversal reached here
-				 *     a | | |
-				 *   3   o-o-o<-- prev_x, prev_y
-				 *     b | | |
-				 *   4   o-o(F) <--(F) forwards traversal  reached here
-				 *     x |\| |     Now both are on the same diagonal and look like they passed,
-				 *   5   o-o-o     but actually they have sneaked past each other and have not met.
-				 *     y | |\|
-				 *   6   o-o-o
-				 *
-				 * The solution is to notice that prev_x,prev_y
-				 * were also already past (B).
-				 */
-				int backward_x = kd_backward[c];
-				int backward_y = xc_to_y(backward_x, c, delta);
-				debug(" prev_x,y = (%d,%d)  c%d:backward_x,y"
-				    " = (%d,%d)  k%d:x,y = (%d,%d)\n",
-				    prev_x, prev_y, c, backward_x, backward_y,
-				    k, x, xk_to_y(x, k));
-				if (prev_x <= backward_x &&
-				    prev_y <= backward_y && x >= backward_x) {
-					*meeting_snake = (struct diff_box){
-						.left_start = backward_x,
-						.left_end = x,
-						.right_start = xc_to_y(backward_x, c, delta),
-						.right_end = xk_to_y(x, k),
-					};
-					debug("HIT x=(%u,%u) - y=(%u,%u)\n",
-					    meeting_snake->left_start,
-					    meeting_snake->right_start,
-					    meeting_snake->left_end,
-					    meeting_snake->right_end);
-					return;
-				}
-			}
+		/*
+		 * If both sides have the same length, forward and
+		 * backward start on the same diagonal, meaning the
+		 * backwards state index c == k.
+		 * As soon as the lengths are not the same, the
+		 * backwards traversal starts on a different diagonal,
+		 * and c = k shifted by the difference in length.
+		 */
+		int c = k_to_c(k, delta);
+
+		/*
+		 * When the file sizes are very different, the
+		 * traversal trees start on far distant diagonals.
+		 * They don't necessarily meet straight on. See whether
+		 * this forward value is on a diagonal that is also
+		 * valid in kd_backward[], and match them if so.
+		 */
+		if (c < -backwards_d || c > backwards_d)
+			continue;
+		/*
+		 * Current k is on a diagonal that exists in kd_backward[].
+		 * If the two x positions have met or passed (forward walked
+		 * onto or past backward), then we've found a midpoint / a
+		 * mid-box.
+		 *
+		 * But we need to avoid matching a situation like this:
+		 *
+		 *       0  1
+		 *        x y
+		 *   0   o-o-o
+		 *     x |\| |
+		 *   1   o-o-o
+		 *     y | |\|
+		 *   2  (B)o-o  <--(B) backwards traversal reached here
+		 *     a | | |
+		 *   3   o-o-o<-- prev_x, prev_y
+		 *     b | | |
+		 *   4   o-o(F) <--(F) forwards traversal  reached here
+		 *     x |\| |     Now both are on the same diagonal and look like they passed,
+		 *   5   o-o-o     but actually they have sneaked past each other and have not met.
+		 *     y | |\|
+		 *   6   o-o-o
+		 *
+		 * The solution is to notice that prev_x,prev_y
+		 * were also already past (B).
+		 */
+		int backward_x = kd_backward[c];
+		int backward_y = xc_to_y(backward_x, c, delta);
+		debug(" prev_x,y = (%d,%d)  c%d:backward_x,y"
+		    " = (%d,%d)  k%d:x,y = (%d,%d)\n",
+		    prev_x, prev_y, c, backward_x, backward_y,
+		    k, x, xk_to_y(x, k));
+		if (prev_x <= backward_x &&
+		    prev_y <= backward_y && x >= backward_x) {
+			*meeting_snake = (struct diff_box){
+				.left_start = backward_x,
+				.left_end = x,
+				.right_start = xc_to_y(backward_x, c, delta),
+				.right_end = xk_to_y(x, k),
+			};
+			debug("HIT x=(%u,%u) - y=(%u,%u)\n",
+			    meeting_snake->left_start,
+			    meeting_snake->right_start,
+			    meeting_snake->left_end,
+			    meeting_snake->right_end);
+			return;
 		}
 	}
 }
@@ -678,53 +677,54 @@ diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
 		 * So in the backward path, we can only match up diagonals when
 		 * the delta is even.
 		 */
-		if ((delta & 1) == 0) {
-			/* Forwards was done first, now both d are the same. */
-			int forwards_d = d;
+		if ((delta & 1) != 0)
+			continue;
 
-			/*
-			 * As soon as the lengths are not the same, the
-			 * backwards traversal starts on a different diagonal,
-			 * and c = k shifted by the difference in length.
-			 */
-			int k = c_to_k(c, delta);
+		/* Forwards was done first, now both d are the same. */
+		int forwards_d = d;
 
+		/*
+		 * As soon as the lengths are not the same, the
+		 * backwards traversal starts on a different diagonal,
+		 * and c = k shifted by the difference in length.
+		 */
+		int k = c_to_k(c, delta);
+
+		/*
+		 * When the file sizes are very different, the
+		 * traversal trees start on far distant diagonals.
+		 * They don't necessarily meet straight on. See whether
+		 * this backward value is also on a valid
+		 * diagonal in kd_forward[], and match them if so.
+		 */
+		if (k >= -forwards_d && k <= forwards_d) {
 			/*
-			 * When the file sizes are very different, the
-			 * traversal trees start on far distant diagonals.
-			 * They don't necessarily meet straight on. See whether
-			 * this backward value is also on a valid
-			 * diagonal in kd_forward[], and match them if so.
+			 * Current c is on a diagonal that exists in
+			 * kd_forward[]. If the two x positions have
+			 * met or passed (backward walked onto or past
+			 * forward), then we've found a midpoint / a
+			 * mid-box.
 			 */
-			if (k >= -forwards_d && k <= forwards_d) {
-				/*
-				 * Current c is on a diagonal that exists in
-				 * kd_forward[]. If the two x positions have
-				 * met or passed (backward walked onto or past
-				 * forward), then we've found a midpoint / a
-				 * mid-box.
-				 */
-				int forward_x = kd_forward[k];
-				int forward_y = xk_to_y(forward_x, k);
-				debug("Compare %d to %d  k=%d  (x=%d,y=%d)"
-				    " to (x=%d,y=%d)\n", forward_x, x, k,
-				    forward_x, xk_to_y(forward_x, k), x,
-				    xc_to_y(x, c, delta));
-				if (forward_x <= prev_x &&
-				    forward_y <= prev_y && forward_x >= x) {
-					*meeting_snake = (struct diff_box){
-						.left_start = x,
-						.left_end = forward_x,
-						.right_start = xc_to_y(x, c, delta),
-						.right_end = xk_to_y(forward_x, k),
-					};
-					debug("HIT x=%u,%u - y=%u,%u\n",
-					    meeting_snake->left_start,
-					    meeting_snake->right_start,
-					    meeting_snake->left_end,
-					    meeting_snake->right_end);
-					return;
-				}
+			int forward_x = kd_forward[k];
+			int forward_y = xk_to_y(forward_x, k);
+			debug("Compare %d to %d  k=%d  (x=%d,y=%d)"
+			    " to (x=%d,y=%d)\n", forward_x, x, k,
+			    forward_x, xk_to_y(forward_x, k), x,
+			    xc_to_y(x, c, delta));
+			if (forward_x <= prev_x &&
+			    forward_y <= prev_y && forward_x >= x) {
+				*meeting_snake = (struct diff_box){
+					.left_start = x,
+					.left_end = forward_x,
+					.right_start = xc_to_y(x, c, delta),
+					.right_end = xk_to_y(forward_x, k),
+				};
+				debug("HIT x=%u,%u - y=%u,%u\n",
+				    meeting_snake->left_start,
+				    meeting_snake->right_start,
+				    meeting_snake->left_end,
+				    meeting_snake->right_end);
+				return;
 			}
 		}
 	}

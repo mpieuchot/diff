@@ -49,7 +49,7 @@ diff_state_add_chunk(struct diff_state *state, bool solved,
 		result = &state->temp_result;
 
 	ARRAYLIST_ADD(chunk, *result);
-	if (!chunk)
+	if (chunk == NULL)
 		return NULL;
 	*chunk = (struct diff_chunk) {
 		.solved = solved,
@@ -98,7 +98,7 @@ diff_data_init_subsection(struct diff_data *d, struct diff_data *parent,
 void
 diff_data_free(struct diff_data *diff_data)
 {
-	if (!diff_data)
+	if (diff_data == NULL)
 		return;
 	if (diff_data->atoms.allocated)
 		ARRAYLIST_FREE(diff_data->atoms);
@@ -159,7 +159,8 @@ diff_run_algo(const struct diff_algo_config *algo_config,
 
 	ARRAYLIST_FREE(state->temp_result);
 
-	if (!algo_config || !algo_config->impl || !state->recursion_depth_left){
+	if (algo_config == NULL || !algo_config->impl ||
+	    !state->recursion_depth_left) {
 		debug("MAX RECURSION REACHED, just dumping diff chunks\n");
 		return diff_algo_none(algo_config, state);
 	}
@@ -198,7 +199,7 @@ diff_run_algo(const struct diff_algo_config *algo_config,
 			struct diff_chunk *final_c;
 
 			ARRAYLIST_ADD(final_c, state->result->chunks);
-			if (!final_c) {
+			if (final_c == NULL) {
 				rc = DIFF_RC_ENOMEM;
 				goto return_rc;
 			}
@@ -236,14 +237,14 @@ diff_main(const struct diff_config *config,
 	struct diff_state state;
 
 	result = malloc(sizeof(struct diff_result));
-	if (!result)
+	if (result == NULL)
 		return NULL;
 
 	*result = (struct diff_result){};
 	diff_data_init_root(&result->left, left_data, left_len);
 	diff_data_init_root(&result->right, right_data, right_len);
 
-	if (!config->atomize_func) {
+	if (config->atomize_func == NULL) {
 		result->rc = DIFF_RC_EINVAL;
 		return result;
 	}
@@ -270,7 +271,7 @@ diff_main(const struct diff_config *config,
 void
 diff_result_free(struct diff_result *result)
 {
-	if (!result)
+	if (result == NULL)
 		return;
 	diff_data_free(&result->left);
 	diff_data_free(&result->right);

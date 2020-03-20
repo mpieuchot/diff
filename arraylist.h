@@ -32,7 +32,7 @@
  * 	        // enlarges the allocated array as needed;
  * 	        // list.head may change due to realloc
  * 	        ARRAYLIST_ADD(x, list);
- * 	        if (!x)
+ * 	        if (x == NULL)
  * 	                abort();
  * 	        *x = random_foo_value;
  * 	}

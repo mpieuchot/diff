@@ -114,7 +114,7 @@ diff_plain(FILE *dest, const struct diff_config *diff_config,
 		return DIFF_RC_EINVAL;
 	result = diff_main(diff_config, info->left_buffer, left_len,
 	    info->right_buffer, right_len);
-	if (!result)
+	if (result == NULL)
 		return DIFF_RC_EINVAL;
 	if (result->rc != DIFF_RC_OK)
 		return result->rc;
@@ -359,7 +359,7 @@ diff_unidiff(FILE *dest, const struct diff_config *diff_config,
 		return DIFF_RC_EINVAL;
 	result = diff_main(diff_config, info->left_buffer, left_len,
 	    info->right_buffer, right_len);
-	if (!result)
+	if (result == NULL)
 		return DIFF_RC_EINVAL;
 	if (result->rc != DIFF_RC_OK)
 		return result->rc;

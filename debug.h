@@ -33,7 +33,7 @@ dump_atom(const struct diff_data *left, const struct diff_data *right, const str
 {
 	const char *s;
 
-	if (!atom) {
+	if (atom == NULL) {
 		print("NULL atom\n");
 		return;
 	}

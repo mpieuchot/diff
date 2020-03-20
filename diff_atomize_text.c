@@ -59,7 +59,7 @@ diff_data_atomize_text_lines(struct diff_data *d)
 
 		/* Record the found line as diff atom */
 		ARRAYLIST_ADD(atom, d->atoms);
-		if (!atom)
+		if (atom == NULL)
 			return DIFF_RC_ENOMEM;
 
 		*atom = (struct diff_atom){

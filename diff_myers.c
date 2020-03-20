@@ -758,7 +758,7 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 	size_t kd_len = max + 1;
 	size_t kd_buf_size = kd_len << 1;
 	int *kd_buf = reallocarray(NULL, kd_buf_size, sizeof(int));
-	if (!kd_buf)
+	if (kd_buf == NULL)
 		return DIFF_RC_ENOMEM;
 	int i;
 	for (i = 0; i < kd_buf_size; i++)
@@ -950,7 +950,7 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 	}
 
 	int *kd_buf = reallocarray(NULL, kd_buf_size, sizeof(int));
-	if (!kd_buf)
+	if (kd_buf == NULL)
 		return DIFF_RC_ENOMEM;
 	int i;
 	for (i = 0; i < kd_buf_size; i++)

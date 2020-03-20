@@ -65,7 +65,7 @@ ranges_merge(struct range *a, const struct range *b)
 static inline int
 range_len(const struct range *r)
 {
-	if (!r)
+	if (r == NULL)
 		return 0;
 	return r->end - r->start;
 }

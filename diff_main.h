@@ -351,20 +351,3 @@ struct diff_result *diff_main(const struct diff_config *config,
 			      const uint8_t *left_data, size_t left_len,
 			      const uint8_t *right_data, size_t right_len);
 void diff_result_free(struct diff_result *result);
-
-/* Diff output generators and invocation shims. */
-struct diff_input_info {
-	const char *left_path;
-	const char *left_buffer;
-	off_t left_size;
-	const char *right_path;
-	const char *right_buffer;
-	off_t right_size;
-};
-
-enum diff_rc diff_plain(FILE *dest, const struct diff_config *diff_config,
-			const struct diff_input_info *info);
-
-enum diff_rc diff_unidiff(FILE *dest, const struct diff_config *diff_config,
-			  const struct diff_input_info *info,
-			  unsigned int context_lines);

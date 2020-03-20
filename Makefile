@@ -6,4 +6,6 @@ SRCS=		diff.c diff_atomize_text.c diff_main.c diff_myers.c \
 
 CFLAGS+=	-Wstrict-prototypes -Wunused-variable
 
+DEBUG=		-g
+
 .include <bsd.prog.mk>

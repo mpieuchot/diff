@@ -83,11 +83,6 @@ diff_output_plain(FILE *dest, const struct diff_input_info *info,
 {
 	int i;
 
-	if (!result)
-		return DIFF_RC_EINVAL;
-	if (result->rc != DIFF_RC_OK)
-		return result->rc;
-
 	diff_output_info(dest, info);
 
 	for (i = 0; i < result->chunks.len; i++) {
@@ -117,6 +112,10 @@ diff_plain(FILE *dest, const struct diff_config *diff_config,
 	left_len = left_len < 0 ? strlen(left) : left_len;
 	right_len = right_len < 0 ? strlen(right) : right_len;
 	result = diff_main(diff_config, left, left_len, right, right_len);
+	if (!result)
+		return DIFF_RC_EINVAL;
+	if (result->rc != DIFF_RC_OK)
+		return result->rc;
 	rc = diff_output_plain(dest, info, result);
 	diff_result_free(result);
 	return rc;
@@ -274,11 +273,6 @@ diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
 	bool info_printed = false;
 	int i;
 
-	if (!result)
-		return DIFF_RC_EINVAL;
-	if (result->rc != DIFF_RC_OK)
-		return result->rc;
-
 	for (i = 0; i < result->chunks.len; i++) {
 		struct diff_chunk *c = &result->chunks.head[i];
 		enum chunk_type t = chunk_type(c);
@@ -361,6 +355,10 @@ diff_unidiff(FILE *dest, const struct diff_config *diff_config,
 	left_len = left_len < 0 ? strlen(left) : left_len;
 	right_len = right_len < 0 ? strlen(right) : right_len;
 	result = diff_main(diff_config, left, left_len, right, right_len);
+	if (!result)
+		return DIFF_RC_EINVAL;
+	if (result->rc != DIFF_RC_OK)
+		return result->rc;
 	rc = diff_output_unidiff(dest, info, result, context_lines);
 	diff_result_free(result);
 	return rc;

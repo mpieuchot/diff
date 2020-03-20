@@ -282,72 +282,64 @@ diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
 	for (i = 0; i < result->chunks.len; i++) {
 		struct diff_chunk *c = &result->chunks.head[i];
 		enum chunk_type t = chunk_type(c);
+		struct chunk_context next;
 
-		if (t == CHUNK_MINUS || t == CHUNK_PLUS) {
-			if (chunk_context_empty(&cc)) {
-				/*
-				 * These are the first lines being printed.
-				 * Note down the start point, any number of
-				 * subsequent chunks may be joined up to this
-				 * unidiff chunk by context lines or by being
-				 * directly adjacent.
-				 */
-				chunk_context_get(&cc, result, i,
-				    context_lines);
-				debug("new chunk to be printed:"
-				    " chunk %d-%d left %d-%d right %d-%d\n",
-				    cc.chunk.start, cc.chunk.end,
-				    cc.left.start, cc.left.end, cc.right.start,
-				    cc.right.end);
-			} else {
-				struct chunk_context next;
+		if (t != CHUNK_MINUS && t != CHUNK_PLUS)
+			continue;
 
-				/*
-				 * There already is a previous chunk noted down
-				 * for being printed.
-				 * Does it join up with this one?
-				 */
-				chunk_context_get(&next, result, i,
-				    context_lines);
-				debug("new chunk to be printed:"
-				    " chunk %d-%d left %d-%d right %d-%d\n",
-				    next.chunk.start, next.chunk.end,
-				    next.left.start, next.left.end,
-				    next.right.start, next.right.end);
-				if (chunk_contexts_touch(&cc, &next)) {
-					/*
-					 * This next context touches or
-					 * overlaps the previous one, join.
-					 */
-					chunk_contexts_merge(&cc, &next);
-					debug("new chunk to be printed touches"
-					    " previous chunk, now: left %d-%d"
-					    " right %d-%d\n",
-					    cc.left.start, cc.left.end,
-					    cc.right.start, cc.right.end);
-				} else {
-					/*
-					 * No touching, so the previous context
-					 * is complete with a gap between it
-					 * and this next one.
-					 * Print the previous one and start
-					 * fresh here.
-					 */
-					debug("new chunk to be printed does not"
-					    "touch previous chunk;"
-					    " print left %d-%d right %d-%d\n",
-					    cc.left.start, cc.left.end,
-					    cc.right.start, cc.right.end);
-					diff_output_unidiff_chunk(dest,
-					    &info_printed, info, result, &cc);
-					cc = next;
-					debug("new unprinted chunk is left"
-					    " %d-%d right %d-%d\n",
-					    cc.left.start, cc.left.end,
-					    cc.right.start, cc.right.end);
-				}
-			}
+		if (chunk_context_empty(&cc)) {
+			/*
+			 * These are the first lines being printed.
+			 * Note down the start point, any number of
+			 * subsequent chunks may be joined up to this
+			 * unidiff chunk by context lines or by being
+			 * directly adjacent.
+			 */
+			chunk_context_get(&cc, result, i, context_lines);
+			debug("new chunk to be printed:"
+			    " chunk %d-%d left %d-%d right %d-%d\n",
+			    cc.chunk.start, cc.chunk.end,
+			    cc.left.start, cc.left.end, cc.right.start,
+			    cc.right.end);
+			continue;
 		}
+
+		/*
+		 * There already is a previous chunk noted down for
+		 * being printed.  Does it join up with this one?
+		 */
+		chunk_context_get(&next, result, i, context_lines);
+		debug("new chunk to be printed: chunk %d-%d left %d-%d right"
+		    " %d-%d\n", next.chunk.start, next.chunk.end,
+		    next.left.start, next.left.end, next.right.start,
+		    next.right.end);
+
+		if (chunk_contexts_touch(&cc, &next)) {
+			/*
+			 * This next context touches or overlaps the
+			 * previous one, join.
+			 */
+			chunk_contexts_merge(&cc, &next);
+			debug("new chunk to be printed touches previous chunk,"
+			    " now: left %d-%d right %d-%d\n", cc.left.start,
+			    cc.left.end, cc.right.start, cc.right.end);
+			continue;
+		}
+
+		/*
+		 * No touching, so the previous context is complete with a
+		 * gap between it and this next one.   Print the previous
+		 * one and start fresh here.
+		 */
+		debug("new chunk to be printed does not touch previous chunk;"
+		    " print left %d-%d right %d-%d\n", cc.left.start,
+		    cc.left.end, cc.right.start, cc.right.end);
+		diff_output_unidiff_chunk(dest, &info_printed, info, result,
+		    &cc);
+
+		cc = next;
+		debug("new unprinted chunk is left %d-%d right %d-%d\n",
+		    cc.left.start, cc.left.end, cc.right.start, cc.right.end);
 
 	}
 

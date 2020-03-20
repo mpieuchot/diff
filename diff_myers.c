@@ -742,6 +742,10 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 	enum diff_rc rc = DIFF_RC_ENOMEM;
 	struct diff_data *left = &state->left;
 	struct diff_data *right = &state->right;
+	unsigned int max;
+	size_t kd_len, kd_buf_size;
+	int d, i, *kd_buf, *kd_forward, *kd_backward;
+	struct diff_box mid_snake = {};
 
 	debug("\n** %s\n", __func__);
 	debug("left:\n");
@@ -754,17 +758,16 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 	 * Allocate two columns of a Myers graph, one for the forward and
 	 * one for the backward traversal.
 	 */
-	unsigned int max = left->atoms.len + right->atoms.len;
-	size_t kd_len = max + 1;
-	size_t kd_buf_size = kd_len << 1;
-	int *kd_buf = reallocarray(NULL, kd_buf_size, sizeof(int));
+	max = left->atoms.len + right->atoms.len;
+	kd_len = max + 1;
+	kd_buf_size = kd_len << 1;
+	kd_buf = reallocarray(NULL, kd_buf_size, sizeof(int));
 	if (kd_buf == NULL)
 		return DIFF_RC_ENOMEM;
-	int i;
 	for (i = 0; i < kd_buf_size; i++)
 		kd_buf[i] = -1;
-	int *kd_forward = kd_buf;
-	int *kd_backward = kd_buf + kd_len;
+	kd_forward = kd_buf;
+	kd_backward = kd_buf + kd_len;
 
 	/*
 	 * The 'k' axis in Myers spans positive and negative indexes, so
@@ -774,8 +777,6 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 	kd_forward += max/2;
 	kd_backward += max/2;
 
-	int d;
-	struct diff_box mid_snake = {};
 	for (d = 0; d <= (max/2); d++) {
 		debug("-- d=%d\n", d);
 		diff_divide_myers_forward(left, right, kd_forward, kd_backward,
@@ -925,6 +926,11 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 	enum diff_rc rc = DIFF_RC_ENOMEM;
 	struct diff_data *left = &state->left;
 	struct diff_data *right = &state->right;
+	unsigned int max;
+	size_t kd_len, kd_buf_size;
+	int d, i, *kd_buf, *kd_origin, *kd_column;
+	int backtrack_d, backtrack_k;
+	int k, x, y;
 
 	debug("\n** %s\n", __func__);
 	debug("left:\n");
@@ -937,9 +943,9 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 	 * Allocate two columns of a Myers graph, one for the forward and
 	 * one for the backward traversal.
 	 */
-	unsigned int max = left->atoms.len + right->atoms.len;
-	size_t kd_len = max + 1 + max;
-	size_t kd_buf_size = kd_len * kd_len;
+	max = left->atoms.len + right->atoms.len;
+	kd_len = max + 1 + max;
+	kd_buf_size = kd_len * kd_len;
 	debug("state size: %zu\n", kd_buf_size);
 	if (kd_buf_size < kd_len /* overflow? */ ||
 	    kd_buf_size * sizeof(int) > algo_config->permitted_state_size) {
@@ -949,10 +955,9 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 		return DIFF_RC_USE_DIFF_ALGO_FALLBACK;
 	}
 
-	int *kd_buf = reallocarray(NULL, kd_buf_size, sizeof(int));
+	kd_buf = reallocarray(NULL, kd_buf_size, sizeof(int));
 	if (kd_buf == NULL)
 		return DIFF_RC_ENOMEM;
-	int i;
 	for (i = 0; i < kd_buf_size; i++)
 		kd_buf[i] = -1;
 
@@ -961,14 +966,11 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 	 * so point the kd to the middle.
 	 * It is then possible to index from -max .. max.
 	 */
-	int *kd_origin = kd_buf + max;
-	int *kd_column = kd_origin;
+	kd_origin = kd_buf + max;
+	kd_column = kd_origin;
 
-	int d;
-	int backtrack_d = -1;
-	int backtrack_k = 0;
-	int k;
-	int x, y;
+	backtrack_d = -1;
+	backtrack_k = 0;
 	for (d = 0; d <= max; d++, kd_column += kd_len) {
 		debug("-- d=%d\n", d);
 		debug("-- %s d=%d\n", __func__, d);

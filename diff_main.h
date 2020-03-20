@@ -197,14 +197,14 @@ void diff_data_free(struct diff_data *diff_data);
  * both sides, and left_count == right_count:
  *
  * - foo  }
- * - bar  }-- diff_chunk{ left_start = &left.atoms.head[0], left_count = 3,
+ * - bar  }-- diff_chunk{ left_start = DD_ATOM_AT(left, 0), left_count = 3,
  * - baz  }            right_start = NULL, right_count = 0 }
  *   moo    }
- *   goo    }-- diff_chunk{ left_start = &left.atoms.head[3], left_count = 3,
- *   zoo    }            right_start = &right.atoms.head[0], right_count = 3 }
+ *   goo    }-- diff_chunk{ left_start = DD_ATOM_AT(left, 3), left_count = 3,
+ *   zoo    }            right_start = DD_ATOM_AT(right, 0), right_count = 3 }
  *  +loo      }
  *  +roo      }-- diff_chunk{ left_start = NULL, left_count = 0,
- *  +too      }            right_start = &right.atoms.head[3], right_count = 3 }
+ *  +too      }            right_start = DD_ATOM_AT(right, 3), right_count = 3 }
  *
  */
 struct diff_chunk {

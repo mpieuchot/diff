@@ -68,11 +68,11 @@ diff_state_add_chunk(struct diff_state *state, bool solved,
 }
 
 void
-diff_data_init_root(struct diff_data *d, const uint8_t *data, size_t len)
+diff_data_init_root(struct diff_data *d, const uint8_t *data, size_t dlen)
 {
 	*d = (struct diff_data) {
 		.data = data,
-		.len = len,
+		.dlen = dlen,
 		.root = d,
 	};
 }
@@ -85,7 +85,7 @@ diff_data_init_subsection(struct diff_data *d, struct diff_data *parent,
 
 	*d = (struct diff_data) {
 		.data = from_atom->at,
-		.len = (last_atom->at + last_atom->len) - from_atom->at,
+		.dlen = (last_atom->at + last_atom->len) - from_atom->at,
 		.root = parent->root,
 		.atoms.head = from_atom,
 		.atoms.len = atoms_count,

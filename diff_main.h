@@ -119,8 +119,8 @@ diff_atom_same(const struct diff_atom *left, const struct diff_atom *right)
  * struct is referencing a subset of atoms.
  */
 struct diff_data {
-	const uint8_t *data;
-	size_t len;
+	const uint8_t	*data;		/* data to compare */
+	size_t		 dlen;		/* size of the buffer */
 	ARRAYLIST_HEAD(, diff_atom) atoms;
 	struct diff_data *root;
 };

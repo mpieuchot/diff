@@ -114,20 +114,24 @@ diffreg(char *file1, char *file2, int flags, int context)
 {
 	char *str1, *str2;
 	struct stat st1, st2;
-	struct diff_input_info info = {
-		.left_path = file1,
-		.right_path = file2,
-	};
+	struct diff_input_info info;
 
 	str1 = mmapfile(file1, &st1);
 	str2 = mmapfile(file2, &st2);
 
+	info = (struct diff_input_info) {
+		.left_path = file1,
+		.left_buffer = str1,
+		.left_size = st1.st_size,
+		.right_path = file2,
+		.right_buffer = str2,
+		.right_size = st2.st_size,
+	};
+
 	if (flags & F_UNIFIED)
-		diff_unidiff(stdout, &diff_config, &info, str1, st1.st_size,
-		    str2, st2.st_size, context);
+		diff_unidiff(stdout, &diff_config, &info, context);
 	else
-		diff_plain(stdout, &diff_config, &info, str1, st1.st_size,
-		    str2, st2.st_size);
+		diff_plain(stdout, &diff_config, &info);
 
 	munmap(str1, st1.st_size);
 	munmap(str2, st2.st_size);

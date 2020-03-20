@@ -356,14 +356,16 @@ void diff_result_free(struct diff_result *result);
 struct diff_input_info {
 	const char *arbitrary_info;
 	const char *left_path;
+	const char *left_buffer;
+	off_t left_size;
 	const char *right_path;
+	const char *right_buffer;
+	off_t right_size;
 };
 
 enum diff_rc diff_plain(FILE *dest, const struct diff_config *diff_config,
-			const struct diff_input_info *info,
-			const char *left, int left_len, const char *right, int right_len);
+			const struct diff_input_info *info);
 
 enum diff_rc diff_unidiff(FILE *dest, const struct diff_config *diff_config,
 			  const struct diff_input_info *info,
-			  const char *left, int left_len, const char *right, int right_len,
 			  unsigned int context_lines);

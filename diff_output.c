@@ -23,7 +23,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "diff_main.h"
 #include "debug.h"
@@ -103,15 +102,18 @@ diff_output_plain(FILE *dest, const struct diff_input_info *info,
 
 enum diff_rc
 diff_plain(FILE *dest, const struct diff_config *diff_config,
-    const struct diff_input_info *info,
-    const char *left, int left_len, const char *right, int right_len)
+    const struct diff_input_info *info)
 {
 	struct diff_result *result;
+	int left_len, right_len;
 	enum diff_rc rc;
 
-	left_len = left_len < 0 ? strlen(left) : left_len;
-	right_len = right_len < 0 ? strlen(right) : right_len;
-	result = diff_main(diff_config, left, left_len, right, right_len);
+	left_len = info->left_size;
+	right_len = info->right_size;
+	if (left_len < 0 || right_len < 0)
+		return DIFF_RC_EINVAL;
+	result = diff_main(diff_config, info->left_buffer, left_len,
+	    info->right_buffer, right_len);
 	if (!result)
 		return DIFF_RC_EINVAL;
 	if (result->rc != DIFF_RC_OK)
@@ -345,16 +347,18 @@ diff_output_unidiff(FILE *dest, const struct diff_input_info *info,
 
 enum diff_rc
 diff_unidiff(FILE *dest, const struct diff_config *diff_config,
-    const struct diff_input_info *info,
-    const char *left, int left_len, const char *right, int right_len,
-    unsigned int context_lines)
+    const struct diff_input_info *info, unsigned int context_lines)
 {
 	struct diff_result *result;
+	int left_len, right_len;
 	enum diff_rc rc;
 
-	left_len = left_len < 0 ? strlen(left) : left_len;
-	right_len = right_len < 0 ? strlen(right) : right_len;
-	result = diff_main(diff_config, left, left_len, right, right_len);
+	left_len = info->left_size;
+	right_len = info->right_size;
+	if (left_len < 0 || right_len < 0)
+		return DIFF_RC_EINVAL;
+	result = diff_main(diff_config, info->left_buffer, left_len,
+	    info->right_buffer, right_len);
 	if (!result)
 		return DIFF_RC_EINVAL;
 	if (result->rc != DIFF_RC_OK)

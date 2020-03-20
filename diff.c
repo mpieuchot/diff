@@ -278,7 +278,7 @@ chunk_contexts_touch(const struct chunk_context *cc, const struct chunk_context 
 }
 
 static void
-chunk_contexts_merge(struct chunk_context *cc, const struct chunk_context *other)
+chunk_context_merge(struct chunk_context *cc, const struct chunk_context *other)
 {
 	ranges_merge(&cc->chunk, &other->chunk);
 	ranges_merge(&cc->left, &other->left);
@@ -391,7 +391,7 @@ output(const struct output_info *info, const struct diff_result *result)
 			 * This next context touches or overlaps the
 			 * previous one, join.
 			 */
-			chunk_contexts_merge(&cc, &next);
+			chunk_context_merge(&cc, &next);
 			continue;
 		}
 

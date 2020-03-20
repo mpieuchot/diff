@@ -221,7 +221,7 @@ static void
 diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
     int *kd_forward, int *kd_backward, int d, struct diff_box *meeting_snake)
 {
-	int delta = (int)right->atoms.len - (int)left->atoms.len;
+	int delta = (int)DD_ATOM_NB(right) - (int)DD_ATOM_NB(left);
 	int prev_x;
 	int prev_y;
 	int k;
@@ -231,17 +231,17 @@ diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
 	debug_dump_myers_graph(left, right, NULL);
 
 	for (k = d; k >= -d; k -= 2) {
-		if (k < -(int)right->atoms.len || k > (int)left->atoms.len) {
+		if (k < -(int)DD_ATOM_NB(right) || k > (int)DD_ATOM_NB(left)) {
 			/*
 			 * This diagonal is completely outside of the Myers
 			 * graph, don't calculate it.
 			 */
-			if (k < -(int)right->atoms.len)
-				debug(" %d k < -(int)right->atoms.len %d\n", k,
-				    -(int)right->atoms.len);
+			if (k < -(int)DD_ATOM_NB(right))
+				debug(" %d k < -(int)DD_ATOM_NB(right) %d\n", k,
+				    -(int)DD_ATOM_NB(right));
 			else
-				debug(" %d k > left->atoms.len %d\n", k,
-				    left->atoms.len);
+				debug(" %d k > DD_ATOM_NB(left) %d\n", k,
+				    DD_ATOM_NB(left));
 			if (k < 0) {
 				/*
 				 * We are traversing negatively, and already
@@ -289,7 +289,7 @@ diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
 		 * k + 1 if k - 1 is outside the graph.
 		 */
 		else if (k > -d && (k == d ||
-		    (k - 1 >= -(int)right->atoms.len &&
+		    (k - 1 >= -(int)DD_ATOM_NB(right) &&
 			    kd_forward[k - 1] >= kd_forward[k + 1]))) {
 			/*
 			 * Advance from k - 1.
@@ -316,8 +316,8 @@ diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
 		}
 
 		/* Slide down any snake that we might find here. */
-		while (x < left->atoms.len &&
-		    xk_to_y(x, k) < right->atoms.len &&
+		while (x < DD_ATOM_NB(left) &&
+		    xk_to_y(x, k) < DD_ATOM_NB(right) &&
 		    diff_atom_same(DD_ATOM_AT(left, x),
 		      DD_ATOM_AT(right, xk_to_y(x, k))))
 			x++;
@@ -330,13 +330,13 @@ diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
 				    kd_forward[fi], kd_forward[fi] - fi);
 #if 0
 				if (kd_forward[fi] >= 0 &&
-				    kd_forward[fi] < left->atoms.len)
+				    kd_forward[fi] < DD_ATOM_NB(left))
 					debug_dump_atom(left, right,
 					    DD_ATOM_AT(left, kd_forward[fi]));
 				else
 					debug("\n");
 				if (kd_forward[fi]-fi >= 0 &&
-				    kd_forward[fi]-fi < right->atoms.len)
+				    kd_forward[fi]-fi < DD_ATOM_NB(right))
 					debug_dump_atom(right, left,
 					    DD_ATOM_AT(right, kd_forward[fi)
 					    - fi]);
@@ -346,8 +346,8 @@ diff_divide_myers_forward(struct diff_data *left, struct diff_data *right,
 			}
 		}
 
-		if (x < 0 || x > left->atoms.len ||
-		    xk_to_y(x, k) < 0 || xk_to_y(x, k) > right->atoms.len)
+		if (x < 0 || x > DD_ATOM_NB(left) ||
+		    xk_to_y(x, k) < 0 || xk_to_y(x, k) > DD_ATOM_NB(right))
 			continue;
 
 		/*
@@ -506,7 +506,7 @@ static void
 diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
     int *kd_forward, int *kd_backward, int d, struct diff_box *meeting_snake)
 {
-	int delta = (int)right->atoms.len - (int)left->atoms.len;
+	int delta = (int)DD_ATOM_NB(right) - (int)DD_ATOM_NB(left);
 	int prev_x;
 	int prev_y;
 	int c;
@@ -516,17 +516,17 @@ diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
 	debug_dump_myers_graph(left, right, NULL);
 
 	for (c = d; c >= -d; c -= 2) {
-		if (c < -(int)left->atoms.len || c > (int)right->atoms.len) {
+		if (c < -(int)DD_ATOM_NB(left) || c > (int)DD_ATOM_NB(right)) {
 			/*
 			 * This diagonal is completely outside of the Myers
 			 * graph, don't calculate it.
 			 */
-			if (c < -(int)left->atoms.len)
-				debug(" %d c < -(int)left->atoms.len %d\n", c,
-				    -(int)left->atoms.len);
+			if (c < -(int)DD_ATOM_NB(left))
+				debug(" %d c < -(int)DD_ATOM_NB(left) %d\n", c,
+				    -(int)DD_ATOM_NB(left));
 			else
-				debug(" %d c > right->atoms.len %d\n", c,
-				    right->atoms.len);
+				debug(" %d c > DD_ATOM_NB(right) %d\n", c,
+				    DD_ATOM_NB(right));
 			if (c < 0) {
 				/*
 				 * We are traversing negatively, and already
@@ -546,7 +546,7 @@ diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
 			 * yet, get the initial x from the bottom right of the
 			 * Myers graph.
 			 */
-			x = left->atoms.len;
+			x = DD_ATOM_NB(left);
 		}
 		/*
 		 * Favoring "-" lines first means favoring moving rightwards
@@ -575,7 +575,7 @@ diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
 		 * c + 1 if c - 1 is outside the graph.
 		 */
 		else if (c > -d && (c == d ||
-		    (c - 1 >= -(int)right->atoms.len &&
+		    (c - 1 >= -(int)DD_ATOM_NB(right) &&
 		     kd_backward[c - 1] <= kd_backward[c + 1]))) {
 			/*
 			 * A top one.
@@ -627,13 +627,13 @@ diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
 				    kd_backward[fi] - fi + delta);
 #if 0
 				if (kd_backward[fi] >= 0 &&
-				    kd_backward[fi] < left->atoms.len)
+				    kd_backward[fi] < DD_ATOM_NB(left))
 					debug_dump_atom(left, right,
 					    DD_ATOM_AT(left, kd_backward[fi]));
 				else
 					debug("\n");
 				if (kd_backward[fi]-fi+delta >= 0 &&
-				    kd_backward[fi]-fi+delta < right->atoms.len)
+				    kd_backward[fi]-fi+delta < DD_ATOM_NB(right))
 					debug_dump_atom(right, left,
 					    DD_ATOM_AT(right, kd_backward[fi]-fi+delta));
 				else
@@ -642,8 +642,8 @@ diff_divide_myers_backward(struct diff_data *left, struct diff_data *right,
 			}
 		}
 
-		if (x < 0 || x > left->atoms.len || xc_to_y(x, c, delta) < 0 ||
-		    xc_to_y(x, c, delta) > right->atoms.len)
+		if (x < 0 || x > DD_ATOM_NB(left) || xc_to_y(x, c, delta) < 0 ||
+		    xc_to_y(x, c, delta) > DD_ATOM_NB(right))
 			continue;
 
 		/*
@@ -758,7 +758,7 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 	 * Allocate two columns of a Myers graph, one for the forward and
 	 * one for the backward traversal.
 	 */
-	max = left->atoms.len + right->atoms.len;
+	max = DD_ATOM_NB(left) + DD_ATOM_NB(right);
 	kd_len = max + 1;
 	kd_buf_size = kd_len << 1;
 	kd_buf = reallocarray(NULL, kd_buf_size, sizeof(int));
@@ -801,9 +801,9 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 		goto return_rc;
 	} else {
 		debug(" mid snake L: %u to %u of %u   R: %u to %u of %u\n",
-		    mid_snake.left_start, mid_snake.left_end, left->atoms.len,
+		    mid_snake.left_start, mid_snake.left_end, DD_ATOM_NB(left),
 		    mid_snake.right_start, mid_snake.right_end,
-		    right->atoms.len);
+		    DD_ATOM_NB(right));
 
 		/* Section before the mid-snake.  */
 		debug("Section before the mid-snake\n");
@@ -859,13 +859,13 @@ diff_algo_myers_divide(const struct diff_algo_config *algo_config,
 		debug("Section after the mid-snake\n");
 		debug("  left_end %u  right_end %u\n", mid_snake.left_end,
 		    mid_snake.right_end);
-		debug("  left_count %u  right_count %u\n", left->atoms.len,
-		    right->atoms.len);
+		debug("  left_count %u  right_count %u\n", DD_ATOM_NB(left),
+		    DD_ATOM_NB(right));
 
 		left_atom = DD_ATOM_AT(left, mid_snake.left_end);
-		left_section_len = left->atoms.len - mid_snake.left_end;
+		left_section_len = DD_ATOM_NB(left) - mid_snake.left_end;
 		right_atom = DD_ATOM_AT(right, mid_snake.right_end);
-		right_section_len = right->atoms.len - mid_snake.right_end;
+		right_section_len = DD_ATOM_NB(right) - mid_snake.right_end;
 
 		if (left_section_len && right_section_len) {
 			/*
@@ -943,7 +943,7 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 	 * Allocate two columns of a Myers graph, one for the forward and
 	 * one for the backward traversal.
 	 */
-	max = left->atoms.len + right->atoms.len;
+	max = DD_ATOM_NB(left) + DD_ATOM_NB(right);
 	kd_len = max + 1 + max;
 	kd_buf_size = kd_len * kd_len;
 	debug("state size: %zu\n", kd_buf_size);
@@ -976,18 +976,18 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 		debug("-- %s d=%d\n", __func__, d);
 
 		for (k = d; k >= -d; k -= 2) {
-			if (k < -(int)right->atoms.len ||
-			    k > (int)left->atoms.len) {
+			if (k < -(int)DD_ATOM_NB(right) ||
+			    k > (int)DD_ATOM_NB(left)) {
 				/*
 				 * This diagonal is completely outside of the
 				 * Myers graph, don't calculate it.
 				 */
-				if (k < -(int)right->atoms.len)
-					debug(" %d k < -(int)right->atoms.len"
-					    " %d\n", k, -(int)right->atoms.len);
+				if (k < -(int)DD_ATOM_NB(right))
+					debug(" %d k < -(int)DD_ATOM_NB(right)"
+					    " %d\n", k, -(int)DD_ATOM_NB(right));
 				else
-					debug(" %d k > left->atoms.len %d\n",
-					    k, left->atoms.len);
+					debug(" %d k > DD_ATOM_NB(left) %d\n",
+					    k, DD_ATOM_NB(left));
 				if (k < 0) {
 					/*
 					 * We are traversing negatively, and
@@ -1041,7 +1041,7 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 				 * the graph.
 				 */
 				if (k > -d && (k == d ||
-				    (k - 1 >= -(int)right->atoms.len &&
+				    (k - 1 >= -(int)DD_ATOM_NB(right) &&
 				    kd_prev_column[k - 1] >= kd_prev_column[k + 1]))) {
 					/*
 					 * Advance from k - 1.
@@ -1068,8 +1068,8 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 			}
 
 			/* Slide down any snake that we might find here. */
-			while (x < left->atoms.len &&
-			    xk_to_y(x, k) < right->atoms.len &&
+			while (x < DD_ATOM_NB(left) &&
+			    xk_to_y(x, k) < DD_ATOM_NB(right) &&
 			    diff_atom_same(DD_ATOM_AT(left, x),
 			      DD_ATOM_AT(right, xk_to_y(x, k))))
 				x++;
@@ -1082,13 +1082,13 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 					    kd_column[fi], kd_column[fi] - fi);
 #if 0
 					if (kd_column[fi] >= 0 &&
-					    kd_column[fi] < left->atoms.len)
+					    kd_column[fi] < DD_ATOM_NB(left))
 						debug_dump_atom(left, right,
 						    DD_ATOM_AT(left, kd_column[fi]));
 					else
 						debug("\n");
 					if (kd_column[fi]-fi >= 0 &&
-					    kd_column[fi]-fi < right->atoms.len)
+					    kd_column[fi]-fi < DD_ATOM_NB(right))
 						debug_dump_atom(right, left,
 						    DD_ATOM_AT(right, kd_column[fi]-fi));
 					else
@@ -1097,8 +1097,8 @@ diff_algo_myers(const struct diff_algo_config *algo_config,
 				}
 			}
 
-			if (x == left->atoms.len &&
-			    xk_to_y(x, k) == right->atoms.len) {
+			if (x == DD_ATOM_NB(left) &&
+			    xk_to_y(x, k) == DD_ATOM_NB(right)) {
 				/* Found a path */
 				backtrack_d = d;
 				backtrack_k = k;

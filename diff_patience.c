@@ -149,7 +149,7 @@ diff_atoms_swallow_identical_neighbors(struct diff_data *left,
 
 	debug("trivially combine identical lines around unique_in_both lines\n");
 
-	for (l_idx = 0; l_idx < left->atoms.len; l_idx = next_l_idx) {
+	for (l_idx = 0; l_idx < DD_ATOM_NB(left); l_idx = next_l_idx) {
 		struct diff_atom *l = DD_ATOM_AT(left, l_idx);
 
 		next_l_idx = l_idx + 1;
@@ -180,8 +180,8 @@ diff_atoms_swallow_identical_neighbors(struct diff_data *left,
 
 		/* Swallow downwards */
 		for (identical_l.end = l_idx + 1, identical_r.end = r_idx + 1;
-		    (identical_l.end < left->atoms.len &&
-		    identical_r.end < right->atoms.len &&
+		    (identical_l.end < DD_ATOM_NB(left) &&
+		    identical_r.end < DD_ATOM_NB(right) &&
 		    diff_atom_same(DD_ATOM_AT(left, identical_l.end),
 			DD_ATOM_AT(right, identical_r.end)));
 		    identical_l.end++, identical_r.end++, next_l_idx++) {
@@ -426,8 +426,8 @@ diff_algo_patience(const struct diff_algo_config *algo_config,
 		} else {
 			atom = NULL;
 			atom_r = NULL;
-			left_idx = left->atoms.len;
-			right_idx = right->atoms.len;
+			left_idx = DD_ATOM_NB(left);
+			right_idx = DD_ATOM_NB(right);
 		}
 
 		/*

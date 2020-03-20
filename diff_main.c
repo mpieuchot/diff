@@ -118,8 +118,8 @@ diff_algo_none(const struct diff_algo_config *algo_config,
 	debug_dump_myers_graph(&state->left, &state->right, NULL);
 
 	/* Add a chunk of equal lines, if any */
-	while (equal_atoms < state->left.atoms.len &&
-	    equal_atoms < state->right.atoms.len &&
+	while (equal_atoms < DD_ATOM_NB(&state->left) &&
+	    equal_atoms < DD_ATOM_NB(&state->right) &&
 	    diff_atom_same(DD_ATOM_AT(&state->left, equal_atoms),
 	    DD_ATOM_AT(&state->right, equal_atoms)))
 		equal_atoms++;
@@ -132,20 +132,20 @@ diff_algo_none(const struct diff_algo_config *algo_config,
 	}
 
 	/* Add a "minus" chunk with all lines from the left. */
-	if (equal_atoms < state->left.atoms.len) {
+	if (equal_atoms < DD_ATOM_NB(&state->left)) {
 		if (!diff_state_add_chunk(state, true,
 		    DD_ATOM_AT(&state->left, equal_atoms),
-		    state->left.atoms.len - equal_atoms,
+		    DD_ATOM_NB(&state->left) - equal_atoms,
 		    NULL, 0))
 			return DIFF_RC_ENOMEM;
 	}
 
 	/* Add a "plus" chunk with all lines from the right. */
-	if (equal_atoms < state->right.atoms.len) {
+	if (equal_atoms < DD_ATOM_NB(&state->right)) {
 		if (!diff_state_add_chunk(state, true,
 		    NULL, 0,
 		    DD_ATOM_AT(&state->right, equal_atoms),
-		    state->right.atoms.len - equal_atoms))
+		    DD_ATOM_NB(&state->right) - equal_atoms))
 			return DIFF_RC_ENOMEM;
 	}
 	return DIFF_RC_OK;
@@ -258,9 +258,9 @@ diff_main(const struct diff_config *config,
 		.recursion_depth_left = config->max_recursion_depth ? : 1024,
 	};
 	diff_data_init_subsection(&state.left, &result->left,
-	    result->left.atoms.head, result->left.atoms.len);
+	    DD_ATOM_FIRST(&result->left), DD_ATOM_NB(&result->left));
 	diff_data_init_subsection(&state.right, &result->right,
-	    result->right.atoms.head, result->right.atoms.len);
+	    DD_ATOM_FIRST(&result->right), DD_ATOM_NB(&result->right));
 
 	result->rc = diff_run_algo(config->algo, &state);
 

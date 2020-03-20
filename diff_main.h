@@ -134,9 +134,19 @@ void diff_data_free(struct diff_data *diff_data);
 	     (_atom)++)
 
 /*
- * Get Atom from `_dd' at given `_index'.
+ * Number of atoms in a given `_dd'
+ */
+#define DD_ATOM_NB(_dd)	((_dd)->atoms.len)
+
+/*
+ * Atom from `_dd' at given `_index'.
  */
 #define DD_ATOM_AT(_dd, _index)	(&(_dd)->atoms.head[(_index)])
+
+/*
+ * First Atom from `_dd'
+ */
+#define DD_ATOM_FIRST(_dd)	DD_ATOM_AT(_dd, 0)
 
 /*
  * Atom index within `_dd'.
@@ -145,7 +155,7 @@ void diff_data_free(struct diff_data *diff_data);
  * (starting with 0).
  */
 #define DD_ATOM_INDEX(_dd, _atom) \
-	((_atom) != NULL ? (_atom) - ((_dd)->atoms.head) : (_dd)->atoms.len)
+	((_atom) != NULL ? (_atom) - DD_ATOM_FIRST(_dd) : DD_ATOM_NB(_dd))
 
 /*
  * Atom index in the entire file.
@@ -162,9 +172,9 @@ void diff_data_free(struct diff_data *diff_data);
  */
 #define DD_ATOM_FOREACH(_atom, _dd, _index) 				\
 	for ((_atom) = DD_ATOM_AT(_dd, _index);				\
-	     (_atom) &&							\
-	     ((_atom) >= (_dd)->atoms.head) &&				\
-	     ((_atom) - (_dd)->atoms.head < (_dd)->atoms.len);		\
+	     (_atom) != NULL &&						\
+	     ((_atom) >= DD_ATOM_FIRST(_dd)) &&				\
+	     (DD_ATOM_INDEX(_dd, _atom) < DD_ATOM_NB(_dd));			\
 	     (_atom)++)
 
 /*

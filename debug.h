@@ -77,7 +77,7 @@ dump_atoms(const struct diff_data *d, struct diff_atom *atom, unsigned int count
 static inline void
 dump(struct diff_data *dd)
 {
-	dump_atoms(dd, dd->atoms.head, dd->atoms.len);
+	dump_atoms(dd, DD_ATOM_FIRST(dd), DD_ATOM_NB(dd));
 }
 
 static inline void
@@ -86,18 +86,18 @@ dump_myers_graph(const struct diff_data *l, const struct diff_data *r, int *kd)
 	int x, y;
 
 	print("  ");
-	for (x = 0; x <= l->atoms.len; x++)
+	for (x = 0; x <= DD_ATOM_NB(l); x++)
 		print("%2d", x);
 	print("\n");
 
-	for (y = 0; y <= r->atoms.len; y++) {
+	for (y = 0; y <= DD_ATOM_NB(r); y++) {
 		print("%2d ", y);
-		for (x = 0; x <= l->atoms.len; x++) {
+		for (x = 0; x <= DD_ATOM_NB(l); x++) {
 
 			/* print d advancements from kd, if any. */
 			int d = -1;
 			if (kd) {
-				int max = l->atoms.len + r->atoms.len;
+				int max = DD_ATOM_NB(l) + DD_ATOM_NB(r);
 				size_t kd_len = max + 1 + max;
 				int *kd_pos = kd;
 				int di;
@@ -120,15 +120,15 @@ dump_myers_graph(const struct diff_data *l, const struct diff_data *r, int *kd)
 				print("%d", d);
 			else
 				print("o");
-			if (x < l->atoms.len && d < 10)
+			if (x < DD_ATOM_NB(l) && d < 10)
 				print("-");
 		}
 		print("\n");
-		if (y == r->atoms.len)
+		if (y == DD_ATOM_NB(r))
 			break;
 
 		print("   ");
-		for (x = 0; x < l->atoms.len; x++) {
+		for (x = 0; x < DD_ATOM_NB(l); x++) {
 			if (diff_atom_same(DD_ATOM_AT(l, x), DD_ATOM_AT(r, y)))
 				print("|\\");
 			else
@@ -142,7 +142,7 @@ static inline void
 debug_dump_myers_graph(const struct diff_data *l, const struct diff_data *r,
     int *kd)
 {
-	if (l->atoms.len > 99 || r->atoms.len > 99)
+	if (DD_ATOM_NB(l) > 99 || DD_ATOM_NB(r) > 99)
 		return;
 	dump_myers_graph(l, r, kd);
 }

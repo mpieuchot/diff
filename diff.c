@@ -318,25 +318,37 @@ static void
 print_default(const struct output_info *info,
     const struct diff_result *result, const struct chunk_context *cc)
 {
+	const struct diff_chunk *c, *cleft = NULL, *cright = NULL;
 	int c_idx;
 
-	printf("%dc%d\n", cc->left.start + 1, cc->right.start + 1);
-
-	/* Now write out all the joined chunks and contexts between them */
 	for (c_idx = cc->chunk.start; c_idx < cc->chunk.end; c_idx++) {
-		const struct diff_chunk *c = &result->chunks.head[c_idx];
+		c = &result->chunks.head[c_idx];
 
 		assert(c->solved);
-
 		if (c->left_count && !c->right_count) {
-			print_lines("< ", c->left_start, c->left_count);
+			cleft = c;
 			continue;
 		}
-
 		if (c->right_count && !c->left_count) {
-			print_lines("> ", c->right_start, c->right_count);
+			cright = c;
 			continue;
 		}
+	}
+
+	if (cleft && cright) {
+		printf("%dc%d\n", cc->left.start + 1, cc->right.start + 1);
+		print_lines("< ", cleft->left_start, cleft->left_count);
+		printf("---\n");
+		print_lines("> ", cright->right_start, cright->right_count);
+		return;
+	}
+
+	if (cleft) {
+		printf("%dd%d\n", cc->left.end, cc->right.start);
+		print_lines("< ", cleft->left_start, cleft->left_count);
+	} else {
+		printf("%da%d\n", cc->left.start, cc->right.end);
+		print_lines("> ", cright->right_start, cright->right_count);
 	}
 }
 

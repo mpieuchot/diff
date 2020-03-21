@@ -23,8 +23,7 @@
 .Nd compare files
 .Sh SYNOPSIS
 .Nm diff
-.Op Fl u
-.Op Fl U Ar number
+.Op Fl c | u | Fl C Ar n | Fl U Ar n
 .Ar file1 file2
 .Sh DESCRIPTION
 The
@@ -37,14 +36,22 @@ line by line.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl u
-Produces a unified diff with 3 lines of context.
-.It Fl U Ar number
+.It Fl C Ar n
+Similar to
+.Fl c
+with
+.Ar n
+lines of context.
+.It Fl c
+Produces a diff with 3 lines of context.
+.It Fl U Ar n
 Similar to
 .Fl u
 with
-.Ar number
+.Ar n
 lines of context.
+.It Fl u
+Produces a unified diff with 3 lines of context.
 .El
 .Sh EXIT STATUS
 The

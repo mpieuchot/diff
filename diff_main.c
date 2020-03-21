@@ -68,12 +68,12 @@ diff_state_add_chunk(struct diff_state *state, bool solved,
 }
 
 void
-diff_data_init_root(struct diff_data *d, const uint8_t *data, size_t dlen)
+diff_data_init_root(struct diff_data *dd, const uint8_t *data, size_t dlen)
 {
-	*d = (struct diff_data) {
+	*dd = (struct diff_data) {
 		.data = data,
 		.dlen = dlen,
-		.root = d,
+		.root = dd,
 	};
 }
 

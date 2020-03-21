@@ -23,6 +23,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
+#include <assert.h>
 #include <err.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -36,12 +37,17 @@
 
 #define DEFAULT_CONTEXT	3
 
-#define F_UNIFIED	(1 << 0)
+#define F_CFORMAT	(1 << 0)
+#define F_FFORMAT	(1 << 1)
+#define F_ED		(1 << 2)
+#define F_UNIFIED	(1 << 3)
 
 struct output_info {
 	const char *left_path;
+	time_t left_time;
 	const char *right_path;
-	int flags;
+	time_t right_time;
+	int format;
 	int context;
 };
 
@@ -84,19 +90,35 @@ const struct diff_config diff_config = {
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: %s file1 file2\n", getprogname());
+	fprintf(stderr, "usage: %s [-c | -e | -f | -u] file1 file2\n",
+	    getprogname());
 	exit(1);
 }
 
 int
 main(int argc, char *argv[])
 {
-	int ch, context = DEFAULT_CONTEXT, flags = 0;
+	int ch, context = DEFAULT_CONTEXT, format = 0;
 	long lval;
 	char *ep;
 
-	while ((ch = getopt(argc, argv, "uU:")) != -1) {
+	while ((ch = getopt(argc, argv, "cC:efuU:")) != -1) {
 		switch (ch) {
+		case 'C':
+			lval = strtol(optarg, &ep, 10);
+			if (*ep != '\0' || lval < 0 || lval >= INT_MAX)
+				usage();
+			context = (int)lval;
+			/* FALLTHROUGH */
+		case 'c':
+			format = F_CFORMAT;
+			break;
+		case 'e':
+			format = F_ED;
+			break;
+		case 'f':
+			format = F_FFORMAT;
+			break;
 		case 'U':
 			lval = strtol(optarg, &ep, 10);
 			if (*ep != '\0' || lval < 0 || lval >= INT_MAX)
@@ -104,7 +126,7 @@ main(int argc, char *argv[])
 			context = (int)lval;
 			/* FALLTHROUGH */
 		case 'u':
-			flags |= F_UNIFIED;
+			format = F_UNIFIED;
 			break;
 		default:
 			usage();
@@ -117,13 +139,13 @@ main(int argc, char *argv[])
 	if (argc != 2)
 		usage();
 
-	return diffreg(argv[0], argv[1], flags, context);
+	return diffreg(argv[0], argv[1], format, context);
 }
 
 int
 diffreg(char *file1, char *file2, int flags, int context)
 {
-	struct output_info info = { file1, file2, flags, context };
+	struct output_info info = { file1, 0, file2, 0, flags, context };
 	char *str1, *str2;
 	struct stat st1, st2;
 	struct diff_result *result;
@@ -137,6 +159,8 @@ diffreg(char *file1, char *file2, int flags, int context)
 	if (result->rc != DIFF_RC_OK)
 		return result->rc;
 
+	info.left_time = st1.st_mtime;
+	info.right_time = st2.st_mtime;
 	output(&info, result);
 
 	diff_result_free(result);
@@ -245,8 +269,13 @@ chunk_context_get(struct chunk_context *cc, const struct output_info *info,
 	int left_start, right_start;
 	int context_lines = 0;
 
-	if (info->flags & F_UNIFIED)
+	switch (info->format) {
+	case F_CFORMAT:
+	case F_UNIFIED:
 		context_lines = info->context;
+	default:
+		break;
+	}
 
 	left_start = DD_ROOT_INDEX(&r->left, c->left_start);
 	right_start = DD_ROOT_INDEX(&r->right, c->right_start);
@@ -286,33 +315,78 @@ chunk_context_merge(struct chunk_context *cc, const struct chunk_context *other)
 }
 
 static void
-print_chunk(bool *header_printed, const struct output_info *info,
+print_default(const struct output_info *info,
     const struct diff_result *result, const struct chunk_context *cc)
 {
-	const struct diff_chunk *first_chunk, *last_chunk;
-	int chunk_start_line, chunk_end_line, c_idx;
-	char *minus, *plus;
+	int c_idx;
 
-	if (range_empty(&cc->left) && range_empty(&cc->right))
+	printf("%dc%d\n", cc->left.start + 1, cc->right.start + 1);
+
+	/* Now write out all the joined chunks and contexts between them */
+	for (c_idx = cc->chunk.start; c_idx < cc->chunk.end; c_idx++) {
+		const struct diff_chunk *c = &result->chunks.head[c_idx];
+
+		assert(c->solved);
+
+		if (c->left_count && !c->right_count) {
+			print_lines("< ", c->left_start, c->left_count);
+			continue;
+		}
+
+		if (c->right_count && !c->left_count) {
+			print_lines("> ", c->right_start, c->right_count);
+			continue;
+		}
+	}
+}
+
+void
+print_context_before(const char *prefix, const struct diff_result *result,
+    const struct chunk_context *cc)
+{
+	const struct diff_chunk *chunk = &result->chunks.head[cc->chunk.start];
+	int start_line;
+
+	start_line = DD_ROOT_INDEX(&result->left, chunk->left_start);
+	if (cc->left.start >= start_line)
 		return;
+	print_lines(prefix, DD_ATOM_AT(&result->left, cc->left.start),
+	    start_line - cc->left.start);
+}
 
-	if (!(*header_printed) && info->flags & F_UNIFIED) {
-		printf("--- %s\n+++ %s\n",
-		    info->left_path ? : "a", info->right_path ? : "b");
+void
+print_context_after(const char *prefix, const struct diff_result *result,
+    const struct chunk_context *cc)
+{
+	const struct diff_chunk *chunk = &result->chunks.head[cc->chunk.end - 1];
+	int end_line;
+
+	end_line = DD_ROOT_INDEX(&result->left,
+	    chunk->left_start + chunk->left_count);
+	if (cc->left.end <= end_line)
+		return;
+	print_lines(prefix, DD_ATOM_AT(&result->left, end_line),
+	    cc->left.end - end_line);
+}
+
+static void
+print_unified(bool *header_printed, const struct output_info *info,
+    const struct diff_result *result, const struct chunk_context *cc)
+{
+	int c_idx;
+
+	assert(info->format == F_UNIFIED);
+
+	if (!(*header_printed)) {
+		printf("--- %s\t%s+++ %s\t%s",
+		    info->left_path, ctime(&info->left_time),
+		    info->right_path, ctime(&info->right_time));
 		*header_printed = true;
 	}
 
-	if (info->flags & F_UNIFIED) {
-		minus = "-";
-		plus = "+";
-		printf("@@ -%d,%d +%d,%d @@\n",
-		    cc->left.start + 1, cc->left.end - cc->left.start,
-		    cc->right.start + 1, cc->right.end - cc->right.start);
-	} else {
-		minus = "< ";
-		plus = "> ";
-		printf("%dc%d\n", cc->left.start + 1, cc->right.start + 1);
-	}
+	printf("@@ -%d,%d +%d,%d @@\n",
+	    cc->left.start + 1, cc->left.end - cc->left.start,
+	    cc->right.start + 1, cc->right.end - cc->right.start);
 
 	/*
 	 * Got the absolute line numbers where to start printing, and the
@@ -322,36 +396,101 @@ print_chunk(bool *header_printed, const struct output_info *info,
 	 * It is guaranteed to be only context lines where left == right,
 	 * so it suffices to look on the left.
 	 */
-	first_chunk = &result->chunks.head[cc->chunk.start];
-	chunk_start_line = DD_ROOT_INDEX(&result->left,
-	    first_chunk->left_start);
-
-	if (cc->left.start < chunk_start_line)
-		print_lines(" ", DD_ATOM_AT(&result->left, cc->left.start),
-		    chunk_start_line - cc->left.start);
+	print_context_before(" ", result, cc);
 
 	/* Now write out all the joined chunks and contexts between them */
 	for (c_idx = cc->chunk.start; c_idx < cc->chunk.end; c_idx++) {
 		const struct diff_chunk *c = &result->chunks.head[c_idx];
 
-		if (c->left_count && c->right_count)
-			print_lines(c->solved ? " " : "?",
-			    c->left_start, c->left_count);
-		else if (c->left_count && !c->right_count)
-			print_lines(c->solved ? minus : "?",
-			    c->left_start, c->left_count);
-		else if (c->right_count && !c->left_count)
-			print_lines(c->solved ? plus : "?",
-			    c->right_start, c->right_count);
+		assert(c->solved);
+
+		if (c->left_count && c->right_count) {
+			print_lines(" ", c->left_start, c->left_count);
+			continue;
+		}
+
+		if (c->left_count && !c->right_count) {
+			print_lines("-", c->left_start, c->left_count);
+			continue;
+		}
+
+		if (c->right_count && !c->left_count) {
+			print_lines("+", c->right_start, c->right_count);
+			continue;
+		}
 	}
 
 	/* Trailing context? */
-	last_chunk = &result->chunks.head[cc->chunk.end - 1];
-	chunk_end_line = DD_ROOT_INDEX(&result->left,
-	    last_chunk->left_start + last_chunk->left_count);
-	if (cc->left.end > chunk_end_line)
-		print_lines(" ", DD_ATOM_AT(&result->left, chunk_end_line),
-		    cc->left.end - chunk_end_line);
+	print_context_after(" ", result, cc);
+}
+
+static void
+print_cformat(bool *header_printed, const struct output_info *info,
+    const struct diff_result *result, const struct chunk_context *cc)
+{
+	const struct diff_chunk *c, *cleft = NULL, *cright = NULL;
+	int c_idx;
+
+	assert(info->format == F_CFORMAT);
+
+	if (!(*header_printed)) {
+		printf("*** %s\t%s--- %s\t%s",
+		    info->left_path, ctime(&info->left_time),
+		    info->right_path, ctime(&info->right_time));
+		*header_printed = true;
+	}
+
+	for (c_idx = cc->chunk.start; c_idx < cc->chunk.end; c_idx++) {
+		c = &result->chunks.head[c_idx];
+
+		assert(c->solved);
+		if (c->left_count && !c->right_count) {
+			cleft = c;
+			continue;
+		}
+		if (c->right_count && !c->left_count) {
+			cright = c;
+			continue;
+		}
+	}
+
+	printf("***************\n");
+	printf("*** %d,%d ****\n", cc->left.start + 1, cc->left.end);
+	if (cleft != NULL) {
+		print_context_before("  ", result, cc);
+		print_lines(cright ? "! " : "- ",
+		    cleft->left_start, cleft->left_count);
+		print_context_after("  ", result, cc);
+	}
+	printf("--- %d,%d ----\n", cc->right.start + 1, cc->right.end);
+	if (cright != NULL) {
+		print_context_before("  ", result, cc);
+		print_lines(cleft ? "! " : "+ ",
+		    cright->right_start, cright->right_count);
+		print_context_after("  ", result, cc);
+	}
+}
+
+static void
+print_chunk(bool *header_printed, const struct output_info *info,
+    const struct diff_result *result, const struct chunk_context *cc)
+{
+	if (range_empty(&cc->left) && range_empty(&cc->right))
+		return;
+
+	switch (info->format) {
+	case F_UNIFIED:
+		print_unified(header_printed, info, result, cc);
+		break;
+	case F_CFORMAT:
+		print_cformat(header_printed, info, result, cc);
+		break;
+	case F_FFORMAT:
+	case F_ED:
+	default:
+		print_default(info, result, cc);
+		break;
+	}
 }
 
 void

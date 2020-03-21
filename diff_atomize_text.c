@@ -24,17 +24,17 @@
 #include "diff_main.h"
 
 static int
-diff_data_atomize_text_lines(struct diff_data *d)
+diff_data_atomize_text_lines(struct diff_data *dd)
 {
-	const uint8_t *pos = d->data;
-	const uint8_t *end = pos + d->dlen;
-	unsigned int array_size_estimate = d->dlen / 50;
+	const uint8_t *pos = dd->data;
+	const uint8_t *end = pos + dd->dlen;
+	unsigned int array_size_estimate = dd->dlen / 50;
 	unsigned int pow2 = 1;
 
 	while (array_size_estimate >>= 1)
 		pow2++;
 
-	ARRAYLIST_INIT(d->atoms, 1 << pow2);
+	ARRAYLIST_INIT(dd->atoms, 1 << pow2);
 
 	while (pos < end) {
 		const uint8_t *line_end = pos;
@@ -58,7 +58,7 @@ diff_data_atomize_text_lines(struct diff_data *d)
 			line_end++;
 
 		/* Record the found line as diff atom */
-		ARRAYLIST_ADD(atom, d->atoms);
+		ARRAYLIST_ADD(atom, dd->atoms);
 		if (atom == NULL)
 			return DIFF_RC_ENOMEM;
 

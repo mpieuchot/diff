@@ -1,7 +1,7 @@
 /*	$OpenBSD$	*/
 
 /*
- * Copyright (c) 2018 Martin Pieuchot <mpi@openbsd.org>
+ * Copyright (c) 2018,2020 Martin Pieuchot <mpi@openbsd.org>
  * Copyright (c) 2020 Neels Hofmeyr <neels@hofmeyr.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -55,8 +55,7 @@ __dead void	 usage(void);
 int		 diffreg(char *, char *, int, int);
 char		*mmapfile(const char *, struct stat *);
 
-void		 output(const struct output_info *,
-		     const struct diff_result *);
+void		 output(const struct diff_result *, const struct output_info *);
 
 const struct diff_algo_config myers, patience, myers_divide;
 
@@ -161,7 +160,7 @@ diffreg(char *file1, char *file2, int flags, int context)
 
 	info.left_time = st1.st_mtime;
 	info.right_time = st2.st_mtime;
-	output(&info, result);
+	output(result, &info);
 
 	diff_result_free(result);
 	munmap(str1, st1.st_size);
@@ -315,8 +314,8 @@ chunk_context_merge(struct chunk_context *cc, const struct chunk_context *other)
 }
 
 static void
-print_default(const struct output_info *info,
-    const struct diff_result *result, const struct chunk_context *cc)
+print_default(const struct diff_result *result, const struct output_info *info,
+    const struct chunk_context *cc)
 {
 	const struct diff_chunk *c, *cleft = NULL, *cright = NULL;
 	int c_idx;
@@ -382,8 +381,8 @@ print_context_after(const char *prefix, const struct diff_result *result,
 }
 
 static void
-print_unified(bool *header_printed, const struct output_info *info,
-    const struct diff_result *result, const struct chunk_context *cc)
+print_unified(const struct diff_result *result, const struct output_info *info,
+    const struct chunk_context *cc, bool *header_printed)
 {
 	int c_idx;
 
@@ -437,8 +436,8 @@ print_unified(bool *header_printed, const struct output_info *info,
 }
 
 static void
-print_cformat(bool *header_printed, const struct output_info *info,
-    const struct diff_result *result, const struct chunk_context *cc)
+print_cformat(const struct diff_result *result, const struct output_info *info,
+    const struct chunk_context *cc, bool *header_printed)
 {
 	const struct diff_chunk *c, *cleft = NULL, *cright = NULL;
 	int c_idx;
@@ -484,29 +483,29 @@ print_cformat(bool *header_printed, const struct output_info *info,
 }
 
 static void
-print_chunk(bool *header_printed, const struct output_info *info,
-    const struct diff_result *result, const struct chunk_context *cc)
+print_chunk(const struct diff_result *result, const struct output_info *info,
+    const struct chunk_context *cc, bool *header_printed)
 {
 	if (range_empty(&cc->left) && range_empty(&cc->right))
 		return;
 
 	switch (info->format) {
 	case F_UNIFIED:
-		print_unified(header_printed, info, result, cc);
+		print_unified(result, info, cc, header_printed);
 		break;
 	case F_CFORMAT:
-		print_cformat(header_printed, info, result, cc);
+		print_cformat(result, info, cc, header_printed);
 		break;
 	case F_FFORMAT:
 	case F_ED:
 	default:
-		print_default(info, result, cc);
+		print_default(result, info, cc);
 		break;
 	}
 }
 
 void
-output(const struct output_info *info, const struct diff_result *result)
+output(const struct diff_result *result, const struct output_info *info)
 {
 	struct chunk_context cc = {};
 	bool header_printed = false;
@@ -551,8 +550,7 @@ output(const struct output_info *info, const struct diff_result *result)
 		 * gap between it and this next one.   Print the previous
 		 * one and start fresh here.
 		 */
-		print_chunk(&header_printed, info, result, &cc);
-
+		print_chunk(result, info, &cc, &header_printed);
 		cc = next;
 
 	}
@@ -560,5 +558,5 @@ output(const struct output_info *info, const struct diff_result *result)
 	if (chunk_context_empty(&cc))
 		return;
 
-	print_chunk(&header_printed, info, result, &cc);
+	print_chunk(result, info, &cc, &header_printed);
 }

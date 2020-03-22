@@ -49,12 +49,11 @@ struct output_info {
 	time_t right_time;
 	int format;
 	int context;
+	int ignore_blanks;
 };
 
 __dead void	 usage(void);
-int		 diffreg(char *, char *, int, int);
 char		*mmapfile(const char *, struct stat *);
-
 void		 output(const struct diff_result *, const struct output_info *);
 
 const struct diff_algo_config myers, patience, myers_divide;
@@ -89,7 +88,7 @@ const struct diff_config diff_config = {
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-c | -e | -f | -u] file1 file2\n",
+	fprintf(stderr, "usage: %s [-c | -e | -f | -u] [-b] file1 file2\n",
 	    getprogname());
 	exit(1);
 }
@@ -97,35 +96,52 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	int ch, context = DEFAULT_CONTEXT, format = 0;
+	struct diff_result *result;
+	struct output_info info;
+	struct stat lsb, rsb;
+	char *ep, *lbuf, *rbuf;
 	long lval;
-	char *ep;
+	int ch;
 
-	while ((ch = getopt(argc, argv, "cC:efuU:")) != -1) {
+	memset(&info, 0, sizeof(info));
+	info.context = DEFAULT_CONTEXT;
+
+	while ((ch = getopt(argc, argv, "bCc:efU:u")) != -1) {
 		switch (ch) {
+		case 'b':
+			info.ignore_blanks = 1;
+			break;
 		case 'C':
 			lval = strtol(optarg, &ep, 10);
 			if (*ep != '\0' || lval < 0 || lval >= INT_MAX)
 				usage();
-			context = (int)lval;
+			info.context = (int)lval;
 			/* FALLTHROUGH */
 		case 'c':
-			format = F_CFORMAT;
+			if (info.format)
+				usage();
+			info.format = F_CFORMAT;
 			break;
 		case 'e':
-			format = F_ED;
+			if (info.format)
+				usage();
+			info.format = F_ED;
 			break;
 		case 'f':
-			format = F_FFORMAT;
+			if (info.format)
+				usage();
+			info.format = F_FFORMAT;
 			break;
 		case 'U':
 			lval = strtol(optarg, &ep, 10);
 			if (*ep != '\0' || lval < 0 || lval >= INT_MAX)
 				usage();
-			context = (int)lval;
+			info.context = (int)lval;
 			/* FALLTHROUGH */
 		case 'u':
-			format = F_UNIFIED;
+			if (info.format)
+				usage();
+			info.format = F_UNIFIED;
 			break;
 		default:
 			usage();
@@ -138,33 +154,24 @@ main(int argc, char *argv[])
 	if (argc != 2)
 		usage();
 
-	return diffreg(argv[0], argv[1], format, context);
-}
+	info.left_path = argv[0];
+	info.right_path = argv[1];
+	lbuf = mmapfile(info.left_path, &lsb);
+	rbuf = mmapfile(info.right_path, &rsb);
 
-int
-diffreg(char *file1, char *file2, int flags, int context)
-{
-	struct output_info info = { file1, 0, file2, 0, flags, context };
-	char *str1, *str2;
-	struct stat st1, st2;
-	struct diff_result *result;
-
-	str1 = mmapfile(file1, &st1);
-	str2 = mmapfile(file2, &st2);
-
-	result = diff_main(&diff_config, str1, st1.st_size, str2, st2.st_size);
+	result = diff_main(&diff_config, lbuf, lsb.st_size, rbuf, rsb.st_size);
 	if (result == NULL)
 		return DIFF_RC_EINVAL;
 	if (result->rc != DIFF_RC_OK)
 		return result->rc;
 
-	info.left_time = st1.st_mtime;
-	info.right_time = st2.st_mtime;
+	info.left_time = lsb.st_mtime;
+	info.right_time = rsb.st_mtime;
 	output(result, &info);
 
 	diff_result_free(result);
-	munmap(str1, st1.st_size);
-	munmap(str2, st2.st_size);
+	munmap(lbuf, lsb.st_size);
+	munmap(rbuf, rsb.st_size);
 
 	return 0;
 }
